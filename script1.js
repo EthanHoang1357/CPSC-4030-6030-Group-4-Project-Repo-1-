@@ -58,9 +58,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                            .attr("y", 15)
                            .attr("fill", "black")
                            .style("font-size", "16px")
-                           .text("Price");
-
-        
+                           .text("Price");        
 
         var PlotPoints = svg.append("g")
                             .selectAll(".dot")
