@@ -24,11 +24,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                            .fitSize([dimensions.width, dimensions.height], mapdata)
 
         var pathGenerator = d3.geoPath(projection)
-
-        var colorScale1 = d3.scaleOrdinal(d3.schemeSet2)
         
         // white = lower price -- Red = higher price
-        var colorScale2 = d3.scaleSequential(d3.interpolateReds)
+        var colorScale = d3.scaleSequential(d3.interpolateReds)
                             .domain(d3.extent(dataset, d => +d.price))
 
         var boroughs = svg.append("g")
@@ -39,7 +37,15 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                           .attr("class", "boroughs")
                           .attr("d", d => pathGenerator(d))
                           .attr("stroke", "black")
-                          .attr("fill", d => colorScale1(d.properties['boro_name']))
+                          .attr("fill", "gray")
+                          .on("mouseover", function(d, i){
+                                d3.select(this).style("stroke-width", "3")
+                                text.text(`Borough: ${i.properties['boro_name']}`)
+                           })
+                           .on("mouseout", function(d, i){
+                                d3.select(this).style("stroke-width", "1")
+                                text.text('Borough:')
+                           })
         
         var points = svg.append("g")
                         .selectAll(".points")
@@ -61,7 +67,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                             return coords ? coords[1] : null
                         })
                         .attr("r", 1.5)
-                        .attr("fill", d => colorScale2(+d.price))
+                        .attr("fill", d => colorScale(+d.price))
 
         var title = svg.append("text")
                        .attr("x", dimensions.width / 2)
@@ -69,6 +75,15 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                        .attr("text-anchor", "middle")
                        .style("font-size", "24px")
                        .text("Map of NYC Boroughs")
+
+        var text = svg.append('text')
+                      .attr("id", 'topbartext')
+                      .attr("x", 75)
+                      .attr("y", 75)
+                      .attr("dx", "-.8em")
+                      .attr("dy", ".15em")
+                      .attr("font-family", "sans-serif")
+                      .text("Borough:")
 
     })
 })
