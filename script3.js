@@ -2,11 +2,11 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
     d3.json("Boroughs.geojson").then(function(mapdata){
 
         var dimensions = {
-            height: 850,
+            height: 350,
             width: 800,
             margin: {
                 top: 50,
-                bottom: 140,
+                bottom: 20,
                 right: 10,
                 left: 55
             }
@@ -18,7 +18,6 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         var svg = d3.select("#Map")
                 .style("width", dimensions.width)
                 .style("height", dimensions.height)
-                .style("border", "3px solid gray")
 
         var projection = d3.geoEqualEarth()
                            .fitSize([dimensions.width, dimensions.height], mapdata)
@@ -70,7 +69,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         .attr("fill", d => colorScale(+d.price))
 
         var title = svg.append("text")
-                       .attr("x", dimensions.width / 2)
+                       .attr("x", 260)
                        .attr("y", dimensions.margin.top / 2)
                        .attr("text-anchor", "middle")
                        .style("font-size", "24px")

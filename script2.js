@@ -1,11 +1,11 @@
 d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
     var dimensions = {
-        height: 850,
+        height: 425,
         width: 1600,
         margin: {
             top: 50,
-            bottom: 140,
+            bottom: 70,
             right: 10,
             left: 55
         }
@@ -96,7 +96,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
     var xAxisText = svg.append("text")
                        .attr("x", dimensions.width / 2)
-                       .attr("y", dimensions.height - 75)
+                       .attr("y", dimensions.height - 10)
                        .attr("fill", "black")
                        .style("font-size", "16px")
                        .text("Borough/Neighborhood")
@@ -111,8 +111,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
     var yAxisText = svg.append("text")
                        .attr("transform", "rotate(-90)")
-                       .attr("x", -dimensions.height / 2)
-                       .attr("y", 15)
+                       .attr("x", -dimensions.height / 2 - 50)
+                       .attr("y", 17)
                        .attr("fill", "black")
                        .style("font-size", "16px")
                        .text("Avg Review Rating")

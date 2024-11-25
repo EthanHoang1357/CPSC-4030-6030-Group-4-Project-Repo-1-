@@ -2,8 +2,8 @@ d3.csv("Airbnb_Open_Data.csv").then(
     function(dataset) {
 
         var dimensions = {
-            height: 800,
-            width: 1600,
+            height: 350,
+            width: 785,
             margin:{
                 top: 50,
                 bottom: 50,
