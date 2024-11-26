@@ -89,7 +89,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                        .attr("y", dimensions.margin.top / 2)
                        .attr("text-anchor", "middle")
                        .style("font-size", "24px")
-                       .text("Map of NYC Boroughs")
+                       .text("Map of AirBNBs in NYC")
 
         var Borough = svg.append('text')
                          .attr("id", 'Borough')
