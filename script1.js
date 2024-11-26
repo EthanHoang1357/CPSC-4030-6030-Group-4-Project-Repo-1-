@@ -15,6 +15,9 @@ d3.csv("Airbnb_Open_Data.csv").then(
         dataset.forEach(d => {
             d['service fee'] = +d['service fee'].replace(/[$,]/g, "")
             d['minimum nights'] = +d['minimum nights']
+            if (!d['room type'] || d['room type'].trim() === "") {
+                d['room type'] = "Unknown";
+            }
         });
 
         const groupedData = d3.flatRollup(
@@ -31,11 +34,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
         );
 
-        dataset.forEach(d => {
-            if (d.roomType === "") { 
-                d.roomType = "Unknown"; 
-            }
-        });
+      
         const processedData = groupedData.map(([minNights, roomType, values]) => ({
             minNights,
             roomType,
