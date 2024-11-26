@@ -34,7 +34,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
     ).flat()
 
-    data.sort((a, b) => d3.ascending(a.borough, b.borough) || d3.ascending(a.neighbourhood, b.neighbourhood))
+    data.sort((a, b) => d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview))
 
     var svg = d3.select("#BarChart")
                 .style("width", dimensions.width)
@@ -46,7 +46,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .padding(0.2);
 
     var yScale = d3.scaleLinear()
-                   .domain([1.5, d3.max(data, d => d.avgReview)])
+                   .domain([Math.floor((d3.min(data, d => d.avgReview) - .1) * 10) / 10, Math.ceil((d3.max(data, d => d.avgReview) + .1) * 10) / 10])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
     var colorScale = d3.scaleOrdinal(d3.schemeSet1)
