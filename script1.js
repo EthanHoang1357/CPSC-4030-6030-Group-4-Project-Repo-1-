@@ -18,9 +18,9 @@ d3.csv("Airbnb_Open_Data.csv").then(
             d['service fee'] = +d['service fee'].replace(/[$,]/g, "")
             d['minimum nights'] = +d['minimum nights']
             if (!d['room type'] || d['room type'].trim() === "") {
-                d['room type'] = "Unknown";
+                d['room type'] = "Unknown"
             }
-        });
+        })
 
         const groupedData = d3.flatRollup(
             dataset,
@@ -29,21 +29,22 @@ d3.csv("Airbnb_Open_Data.csv").then(
             }),
             d => d['minimum nights'],
             d => d['room type']
-        );
+        )
 
       
         const processedData = groupedData.map(([minNights, roomType, values]) => ({
             minNights,
             roomType,
             avgServiceFee: values.avgServiceFee
-        }));
+        }))
 
+        const customColors = ["#264653", "#2A9D8F", "#AD0F8F", "#0062D5"]
        
         const colorScale = d3.scaleOrdinal()
                              .domain([...new Set(dataset.map(d => d['room type']))])
-                             .range(d3.schemeCategory10);
+                             .range(customColors)
 
-        const roomTypes = colorScale.domain();
+        const roomTypes = colorScale.domain()
         var svg = d3.select("#ScatterPlot")
                     .style("width", dimensions.width)
                     .style("height", dimensions.height)
@@ -85,6 +86,16 @@ d3.csv("Airbnb_Open_Data.csv").then(
                            .style("font-size", "16px")
                            .text("Minimum Nights")
 
+        var tooltip = d3.select("body")
+                        .append("div")
+                        .style("position", "absolute")
+                        .style("background-color", "white")
+                        .style("border", "1px solid black")
+                        .style("border-radius", "5px")
+                        .style("padding", "5px")
+                        .style("pointer-events", "none")
+                        .style("opacity", 0)
+
         var PlotPoints = svg.append("g")
                             .selectAll("dot")
                             .data(processedData)
@@ -93,11 +104,26 @@ d3.csv("Airbnb_Open_Data.csv").then(
                             .attr("cx", d => xScale(d.avgServiceFee))
                             .attr("cy", d => yScale(d.minNights))
                             .attr("r", 3)
-                            .attr("fill", d => colorScale(d.roomType)); // Apply color based on room type
+                            .attr("fill", d => colorScale(d.roomType))
+                            .on("mouseover", function(d, i){
+                                d3.select(this).style("stroke", "black")
+                                tooltip.style("opacity", 1)
+                                       .html(`
+                                            <strong>Minimum Nights:</strong> ${i.minNights}<br>
+                                            <strong>Avg Service Fee</strong> ${i.avgServiceFee.toFixed(2)}<br>
+                                            <strong>Room Type:</strong> ${i.roomType}
+                                        `)
+                                       .style("left", (d.pageX + 10) + "px")
+                                       .style("top", (d.pageY + 10) + "px")
+                          })
+                          .on("mouseout", function(d, i){
+                                d3.select(this).style("stroke", "none")
+                                tooltip.style("opacity", 0)
+                          })
 
         const legend = svg.append("g")
-                          .attr("transform", `translate(${dimensions.width - dimensions.margin.left - dimensions.margin.right-80}, 40)`)
-                          .attr("class", "legend");
+                          .attr("transform", `translate(${dimensions.width - 100}, 10)`)
+                          .attr("class", "legend")
 
         const legendRectSize = 10; 
         const legendSpacing = 5;       
@@ -110,7 +136,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
               .attr("y", (d, i) => i * (legendRectSize + legendSpacing)) 
               .attr("width", legendRectSize)
               .attr("height", legendRectSize)
-              .attr("fill", d => colorScale(d));
+              .attr("fill", d => colorScale(d))
         
 
         legend.selectAll("text")
@@ -121,7 +147,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
               .attr("y", (d, i) => i * (legendRectSize + legendSpacing) + legendRectSize / 2)
               .attr("dy", "0.35em")
               .style("font-size", "10px") 
-              .text(d => d);
+              .text(d => d)
                         
         var title = svg.append("text")
                        .attr("x", dimensions.width / 2)

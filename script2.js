@@ -11,10 +11,6 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         }
     }
 
-    // Only showing neighbourhoods in the Bronx for now as a reference
-    //dataset = dataset.filter(d => d['neighbourhood group'] === 'Bronx' && d.neighbourhood && !isNaN(+d['review rate number']) && +d['review rate number'] > 0)
-
-    // Showing all neighborhoods
     dataset = dataset.filter(d => d["neighbourhood group"] && d.neighbourhood && !isNaN(+d['review rate number']) && +d['review rate number'] > 0)
 
     dataset.forEach(d => {
@@ -49,7 +45,19 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .domain([Math.floor((d3.min(data, d => d.avgReview) - .1) * 10) / 10, Math.ceil((d3.max(data, d => d.avgReview) + .1) * 10) / 10])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
-    var colorScale = d3.scaleOrdinal(d3.schemeSet1)
+    const customColors = ["#170083", "#EB0086", "#6D1788", "#F77F00", "#BEAF0C"]
+
+    var colorScale = d3.scaleOrdinal(customColors)
+
+    var tooltip = d3.select("body")
+                    .append("div")
+                    .style("position", "absolute")
+                    .style("background-color", "white")
+                    .style("border", "1px solid black")
+                    .style("border-radius", "5px")
+                    .style("padding", "5px")
+                    .style("pointer-events", "none")
+                    .style("opacity", 0)
 
     var bars = svg.append("g")
                   .selectAll("rect")
@@ -63,13 +71,18 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                   .attr("fill", d => colorScale(d.borough))
                   .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
-                        Neighborhoodtext.text(`Neighborhood: ${i.neighbourhood}`)
-                        AvgRRtext.text(`Average Review Rating: ${i.avgReview.toFixed(3)}`)
+                        tooltip.style("opacity", 1)
+                               .html(`
+                                    <strong>Borough:</strong> ${i.borough}<br>
+                                    <strong>Neighborhood:</strong> ${i.neighbourhood}<br>
+                                    <strong>Avg Review Rating:</strong> ${i.avgReview.toFixed(3)}
+                                `)
+                               .style("left", (d.pageX + 10) + "px")
+                               .style("top", (d.pageY + 10) + "px")
                   })
                   .on("mouseout", function(d, i){
                         d3.select(this).style("stroke", "none")
-                        Neighborhoodtext.text('Neighborhood:')
-                        AvgRRtext.text(`Average Review Rating:`)
+                        tooltip.style("opacity", 0)
                   })
 
     var xAxisGen = d3.axisBottom().scale(xScale)
@@ -122,24 +135,5 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .attr("y", dimensions.margin.top / 2)
                    .attr("text-anchor", "middle")
                    .style("font-size", "24px")
-                   //.text("Avg Review Rating per Neighborhood (Bronx)")
                    .text("Avg Review Rating per Neighborhood")
-
-    var Neighborhoodtext = svg.append('text')
-                              .attr("id", 'Neighborhoodtext')
-                              .attr("x", dimensions.width / 2)
-                              .attr("y", dimensions.margin.top / 2 + 30)
-                              .attr("dx", "-.8em")
-                              .attr("dy", ".15em")
-                              .attr("font-family", "sans-serif")
-                              .text("Neighborhood:")
-
-    var AvgRRtext = svg.append('text')
-                              .attr("id", 'AvgRRtext')
-                              .attr("x", dimensions.width / 2 - 30)
-                              .attr("y", dimensions.margin.top / 2 + 50)
-                              .attr("dx", "-.8em")
-                              .attr("dy", ".15em")
-                              .attr("font-family", "sans-serif")
-                              .text("Average Review Rating:")
 })
