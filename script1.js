@@ -38,9 +38,9 @@ d3.csv("Airbnb_Open_Data.csv").then(
             avgServiceFee: values.avgServiceFee
         }))
 
-        const customColors = ["#264653", "#2A9D8F", "#AD0F8F", "#0062D5"]
+        var customColors = ["#264653", "#2A9D8F", "#AD0F8F", "#0062D5"]
        
-        const colorScale = d3.scaleOrdinal()
+        var colorScale = d3.scaleOrdinal()
                              .domain([...new Set(dataset.map(d => d['room type']))])
                              .range(customColors)
 
@@ -110,7 +110,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                                 tooltip.style("opacity", 1)
                                        .html(`
                                             <strong>Minimum Nights:</strong> ${i.minNights}<br>
-                                            <strong>Avg Service Fee</strong> ${i.avgServiceFee.toFixed(2)}<br>
+                                            <strong>Avg Service Fee:</strong> ${i.avgServiceFee.toFixed(2)}<br>
                                             <strong>Room Type:</strong> ${i.roomType}
                                         `)
                                        .style("left", (d.pageX + 10) + "px")
@@ -155,5 +155,72 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .attr("text-anchor", "middle")
                        .style("font-size", "24px")
                        .text("Average Service Fee vs Minimum Nights")
+
+
+
+
+
+
+    //code goes here
+    function updateScatterPlot(borough){
+        //alert(borough);
+
+        let filteredData = dataset.filter(d => d["neighbourhood group"] === borough);
+
+        //console.log(filteredData);
+
+
+        //remove old circles
+        svg.selectAll("circle").remove();
+        
+        //replot graph
+        const groupedData = d3.flatRollup(
+            filteredData,
+            v => d3.mean(v, d => d['service fee']),
+            d => d['minimum nights'],
+            d => d['room type']
+        ).map(([minNights, roomType, avgServiceFee]) => ({
+            minNights, roomType, avgServiceFee
+        }));
+    
+        // Remove all circles before re-drawing
+        svg.selectAll("circle").remove();
+    
+        // Set up scales
+        xScale.domain([0, d3.max(groupedData, d => d.avgServiceFee) + 10]);
+        yScale.domain(d3.extent(groupedData, d => d.minNights));
+    
+        xAxis.call(d3.axisBottom(xScale));
+        yAxis.call(d3.axisLeft(yScale));
+    
+        // Re-draw circles
+        svg.selectAll("circle")
+            .data(groupedData)
+            .enter().append("circle")
+            .attr("r", 3)
+            .attr("fill", d => colorScale(d.roomType))
+            .attr("cx", d => xScale(d.avgServiceFee))
+            .attr("cy", d => yScale(d.minNights))
+            .on("mouseover", (event, d) => {
+                tooltip.style("opacity", 1)
+                       .html(`<strong>Minimum Nights:</strong> ${d.minNights}<br>
+                            <strong>Average Service Fee:</strong> $${d.avgServiceFee.toFixed(2)}<br>
+                            <strong>Room Type:</strong> ${d.roomType} `)
+                       
+                       .style("left", `${event.pageX + 10}px`)
+                       .style("top", `${event.pageY + 10}px`);
+            })
+            .on("mouseout", () => tooltip.style("opacity", 0));
+
+        
+
+
+
+    }
+    
+    
+    window.updateScatterPlot = updateScatterPlot;
+                       
     }
 )
+

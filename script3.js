@@ -58,6 +58,11 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                 d3.select(this).style("stroke-width", "1")
                                 tooltip.style("opacity", 0)
                            })
+                           .on("click", function(d, i){
+                                        //update scatter plot code here
+                                        updateScatterPlot(`${i.properties['boro_name']}`);
+                            
+                            })
         
         var points = svg.append("g")
                         .selectAll(".points")
@@ -106,6 +111,10 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                             d3.select(this).style("stroke", "none")
                             tooltip.style("opacity", 0)
                             d3.selectAll(".boroughs").style("stroke-width", "1")
+                       })
+                       .on("click", function(d,i){
+                            //update scatterplot code here
+                            updateScatterPlot(i["neighbourhood group"]);
                        })
 
         var title = svg.append("text")
