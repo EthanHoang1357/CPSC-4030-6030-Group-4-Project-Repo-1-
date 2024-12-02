@@ -50,7 +50,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                           .on("mouseover", function(d, i){
                                 d3.select(this).style("stroke-width", "3")
                                 tooltip.style("opacity", 1)
-                                .html(`<strong>Borough:</strong> ${i.properties['boro_name']}<br>`)
+                                       .html(`<strong>Borough:</strong> ${i.properties['boro_name']}<br>`)
                                        .style("left", (d.pageX + 10) + "px")
                                        .style("top", (d.pageY + 10) + "px")
                            })
@@ -60,7 +60,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                            })
                            .on("click", function(d, i){
                                         //update scatter plot code here
-                                        updateScatterPlot(`${i.properties['boro_name']}`);
+                                        updateScatterPlotByBorough(`${i.properties['boro_name']}`)
+                                        updatePointsByBorough(`${i.properties['boro_name']}`)
+                                        updateBarChartByBorough(`${i.properties['boro_name']}`)
                             
                             })
         
@@ -91,12 +93,12 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                 d3.geoContains(borough, [+d.long, +d.lat])
                             )
                             d3.selectAll(".boroughs")
-                              .filter(function(b) {
-                                  return b.properties['boro_name'] === i["neighbourhood group"]
-                              })
-                              .style("stroke-width", "3")
+                            .filter(function(b) {
+                                return b.properties['boro_name'] === i["neighbourhood group"]
+                            })
+                            .style("stroke-width", "3")
                             tooltip.style("opacity", 1)
-                                   .html(`
+                                .html(`
                                         <strong>Borough:</strong> ${i["neighbourhood group"]}<br>
                                         <strong>Neighborhood:</strong> ${i.neighbourhood}<br>
                                         <strong>Price:</strong> $${i.price}<br>
@@ -104,18 +106,65 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                         <strong>Review Rate Number:</strong> ${i["review rate number"]}<br>
                                         <strong>Construction Year:</strong> ${i["Construction year"]}<br>
                                     `)
-                                   .style("left", (d.pageX + 10) + "px")
-                                   .style("top", (d.pageY + 10) + "px")
-                       })
-                       .on("mouseout", function(d, i){
+                                .style("left", (d.pageX + 10) + "px")
+                                .style("top", (d.pageY + 10) + "px")
+                    })
+                    .on("mouseout", function(d, i){
                             d3.select(this).style("stroke", "none")
                             tooltip.style("opacity", 0)
                             d3.selectAll(".boroughs").style("stroke-width", "1")
-                       })
-                       .on("click", function(d,i){
+                    })
+                    .on("click", function(d,i){
                             //update scatterplot code here
                             updateScatterPlot(i["neighbourhood group"]);
-                       })
+                    })
+    
+        function updatePointsByBorough(selectedBorough) {
+
+            svg.selectAll(".points").remove()
+
+            var selectedData = dataset.filter(d => {
+                return mapdata.features.some(borough =>
+                    borough.properties['boro_name'] === selectedBorough &&
+                    d3.geoContains(borough, [+d.long, +d.lat])
+                )
+            })
+            
+            svg.selectAll(".points")
+                    .data(selectedData)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "points")
+                    .attr("cx", d => {
+                        let coords = projection([+d.long, +d.lat])
+                        return coords ? coords[0] : null
+                    })
+                    .attr("cy", d => {
+                        let coords = projection([+d.long, +d.lat])
+                        return coords ? coords[1] : null
+                    })
+                    .attr("r", 2)
+                    .attr("fill", d => colorScale(+d.price))
+                    .on("mouseover", function(event, i){
+                        d3.select(this).style("stroke", "black")
+                        tooltip.style("opacity", 1)
+                                .html(`
+                                    <strong>Borough:</strong> ${i["neighbourhood group"]}<br>
+                                    <strong>Neighborhood:</strong> ${i.neighbourhood}<br>
+                                    <strong>Price:</strong> $${i.price}<br>
+                                    <strong>Room Type:</strong> ${i["room type"]}<br>
+                                    <strong>Review Rate Number:</strong> ${i["review rate number"]}<br>
+                                    <strong>Construction Year:</strong> ${i["Construction year"]}<br>
+                                `)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY + 10) + "px")
+                    })
+                    .on("mouseout", function(){
+                        d3.select(this).style("stroke", "none")
+                        tooltip.style("opacity", 0)
+                    })
+                    
+        }
 
         var title = svg.append("text")
                        .attr("x", 260)

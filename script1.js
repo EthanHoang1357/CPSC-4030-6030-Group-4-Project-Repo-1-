@@ -156,13 +156,8 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .style("font-size", "24px")
                        .text("Average Service Fee vs Minimum Nights")
 
-
-
-
-
-
     //code goes here
-    function updateScatterPlot(borough){
+    function updateScatterPlotByBorough(borough){
         let filteredData;
     
         if (borough === "All") {
@@ -170,8 +165,6 @@ d3.csv("Airbnb_Open_Data.csv").then(
         } else {
             filteredData = dataset.filter(d => d["neighbourhood group"] === borough);
         }
-
-
 
         //remove old circles
         svg.selectAll("circle").remove();
@@ -184,17 +177,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
             d => d['room type']
         ).map(([minNights, roomType, avgServiceFee]) => ({
             minNights, roomType, avgServiceFee
-        }));
-    
-        // Remove all circles before re-drawing
-        svg.selectAll("circle").remove();
-    
-        // Set up scales
-        xScale.domain([0, d3.max(groupedData, d => d.avgServiceFee) + 10]);
-        yScale.domain(d3.extent(groupedData, d => d.minNights));
-    
-        xAxis.call(d3.axisBottom(xScale));
-        yAxis.call(d3.axisLeft(yScale));
+        }))
     
         // Re-draw circles
         svg.selectAll("circle")
@@ -214,18 +197,11 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .style("top", `${event.pageY + 10}px`);
             })
             .on("mouseout", () => tooltip.style("opacity", 0));
-
-        
-
-
+    }  
+    
+    window.updateScatterPlotByBorough = updateScatterPlotByBorough
 
     }
-    
-    
-    window.updateScatterPlot = updateScatterPlot;
-                       
-    }
-
     
 )
 
