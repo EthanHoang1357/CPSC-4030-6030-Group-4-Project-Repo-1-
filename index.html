@@ -13,8 +13,15 @@
       }
 
       h1 {
-        margin: 20px;
+        margin: 5px;
         font-size: 36px;
+        text-align: center;
+        margin-left: -150px;
+      }
+
+      button {
+        margin: 5px;
+        font-size: 24px;
         text-align: center;
         margin-left: -150px;
       }
@@ -54,6 +61,7 @@
   </head>
   <body>
     <h1>Dashboard</h1>
+    <button type="button" onclick = "location.reload()">Reset Filtering</button>
     <div class="dashboard">
       <svg id="Map"></svg>
       <svg id="ScatterPlot"></svg>

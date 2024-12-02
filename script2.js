@@ -1,4 +1,3 @@
-//Imports .csv file 
 d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
     var dimensions = {
         height: 425,
@@ -11,27 +10,23 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         }
     }
 
-    // Clean and process data
     dataset = dataset.filter(d => d["neighbourhood group"] && d.neighbourhood && !isNaN(+d['review rate number']) && +d['review rate number'] > 0)
-    
-    //Corrects misspellings in attributes
+
     dataset.forEach(d => {
         if (d["neighbourhood group"] === "brookln") d["neighbourhood group"] = "Brooklyn"
         if (d["neighbourhood group"] === "manhatan") d["neighbourhood group"] = "Manhattan"
     })
-        //Group data by borough and neighborhood and calculate average review rating
+
     var avgReviewByNeighborhood = d3.rollup(dataset, 
         v => d3.mean(v, d => +d["review rate number"]),
         d => d["neighbourhood group"],
         d => d["neighbourhood"]
     )
 
-    //Organize data into array of objects
     var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
         Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
     ).flat()
 
-    //Sort data into descending order
     data.sort((a, b) => d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview))
 
     var svg = d3.select("#BarChart")
@@ -44,10 +39,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .padding(0.2)
 
     var yScale = d3.scaleLinear()
-                   .domain([1.5, d3.max(data, d => d.avgReview)])
+                   .domain([0, 5])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
-    //Color scale
     var colorScale = d3.scaleOrdinal(["#170083", "#EB0086", "#6D1788", "#F77F00", "#BEAF0C"])
 
     var tooltip = d3.select("body")
@@ -78,9 +72,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                     <strong>Borough:</strong> ${i.borough}<br>
                                     <strong>Neighborhood:</strong> ${i.neighbourhood}<br>
                                     <strong>Avg Review Rating:</strong> ${i.avgReview.toFixed(3)}
-                    `)
-                    .style("left", (d.pageX + 10) + "px")
-                    .style("top", (d.pageY + 10) + "px")
+                                `)
+                                .style("left", (d.pageX + 10) + "px")
+                                .style("top", (d.pageY + 10) + "px")
                   })
                   .on("mouseout", function(d, i){
                         d3.select(this).style("stroke", "none")
@@ -131,36 +125,35 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         .style("font-size", "16px")
                         .text("Avg Review Rating")
 
-    function updateBarChartByBorough(borough) {
-        let filteredData = (borough === "All") 
-            ? dataset 
-            : dataset.filter(d => d["neighbourhood group"] === borough)
-    
-        // Group data by borough and neighborhood and calculate average review rating
+    var filteredData = dataset
+    var NeighborhoodFilterTF = false
+    var CurrentlySelectedNeighborhood = null
+
+    function updateBarChartByBorough(SelectedBorough) {
+
+        filteredData = dataset.filter(d => {
+            return d["neighbourhood group"] === SelectedBorough
+        })
+
         var avgReviewByNeighborhood = d3.rollup(
             filteredData,
             v => d3.mean(v, d => +d["review rate number"]),
             d => d["neighbourhood group"],
             d => d["neighbourhood"]
         )
-    
-        // Organize data into array of objects
+
         var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
             Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
         ).flat()
-    
-        // Sort data by borough and average review
+
         data.sort((a, b) => 
             d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
         )
-    
-        // Update x scale
+        
         xScale.domain(data.map(d => d.neighbourhood))
-    
-        // Remove old bars
+
         barsGroup.selectAll("rect").remove()
-    
-        // Add new bars
+
         barsGroup.selectAll("rect")
             .data(data)
             .enter()
@@ -171,7 +164,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .attr("width", xScale.bandwidth())
             .attr("fill", d => colorScale(d.borough))
             .on("mouseover", function(d, i) {
-                d3.select(this).style("stroke", "black")
+                if(CurrentlySelectedNeighborhood !== this) {
+                    d3.select(this).style("stroke", "black")
+                }
                 tooltip.style("opacity", 1)
                     .html(`
                         <strong>Borough:</strong> ${i.borough}<br>
@@ -182,10 +177,18 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     .style("top", (d.pageY + 10) + "px")
             })
             .on("mouseout", function() {
-                d3.select(this).style("stroke", "none")
+                if(CurrentlySelectedNeighborhood !== this) {
+                    d3.select(this).style("stroke", "none")
+                }
                 tooltip.style("opacity", 0)
             })
             .on("click", function(d, i) {
+                NeighborhoodFilterTF = true
+                barsGroup.selectAll("rect").style("stroke", "none")
+                                           .style("stroke-width", "1")
+                d3.select(this).style("stroke", "black")
+                               .style("stroke-width", "3")
+                CurrentlySelectedNeighborhood = this
                 updateMapByNeighborhood(i.neighbourhood)
                 updateScatterPlotByNeighborhood(i.neighbourhood)
             })
@@ -193,7 +196,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             xAxisText.remove()
             svg.selectAll(".BoroughText").remove()
 
-            xAxisGen = d3.axisBottom(xScale)
+            xAxisGen = d3.axisBottom().scale(xScale)
 
             xAxis.call(xAxisGen)
                 .selectAll("text")
@@ -207,10 +210,117 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 .attr("y", dimensions.height - 10)
                 .attr("fill", "black")
                 .style("font-size", "16px")
-                .text(borough)
+                .text(SelectedBorough)
+    }
+
+    var roomTypeFilteredData = filteredData
+
+    function updateBarChartByRoomType(SelectedRoomType) {
+
+        roomTypeFilteredData = filteredData.filter(d => {
+            return d["room type"] === SelectedRoomType
+        })
+    
+        var avgReviewByNeighborhood = d3.rollup(
+            roomTypeFilteredData,
+            v => d3.mean(v, d => +d["review rate number"]),
+            d => d["neighbourhood group"],
+            d => d["neighbourhood"]
+        )
+    
+        var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
+            Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
+        ).flat()
+    
+        data.sort((a, b) => 
+            d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
+        )
+    
+        xScale.domain(data.map(d => d.neighbourhood))
+    
+        barsGroup.selectAll("rect").remove()
+    
+        barsGroup.selectAll("rect")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("x", d => xScale(d.neighbourhood))
+            .attr("y", d => yScale(d.avgReview))
+            .attr("height", d => dimensions.height - yScale(d.avgReview) - dimensions.margin.bottom)
+            .attr("width", xScale.bandwidth())
+            .attr("fill", d => colorScale(d.borough))
+            .on("mouseover", function(d, i) {
+                if(CurrentlySelectedNeighborhood !== this) {
+                    d3.select(this).style("stroke", "black")
+                }
+                tooltip.style("opacity", 1)
+                    .html(`
+                        <strong>Borough:</strong> ${i.borough}<br>
+                        <strong>Neighborhood:</strong> ${i.neighbourhood}<br>
+                        <strong>Avg Review Rating:</strong> ${i.avgReview.toFixed(3)}
+                    `)
+                    .style("left", (d.pageX + 10) + "px")
+                    .style("top", (d.pageY + 10) + "px")
+            })
+            .on("mouseout", function() {
+                if(CurrentlySelectedNeighborhood !== this) {
+                    d3.select(this).style("stroke", "none")
+                }
+                tooltip.style("opacity", 0)
+            })
+            .on("click", function(d, i) {
+                NeighborhoodFilterTF = true
+                barsGroup.selectAll("rect").style("stroke", "none")
+                                           .style("stroke-width", "1")
+                d3.select(this).style("stroke", "black")
+                               .style("stroke-width", "3")
+                CurrentlySelectedNeighborhood = this
+                updateMapByNeighborhood(i.neighbourhood)
+                updateScatterPlotByNeighborhood(i.neighbourhood)
+            })
+
+            svg.selectAll(".BoroughText").remove()
+
+            if(NeighborhoodFilterTF === true) {
+                xAxisText.remove()
+
+                xAxisGen = d3.axisBottom().scale(xScale)
+
+                xAxis.call(xAxisGen)
+                    .selectAll("text")
+                    .style("font-size", "10px")
+                    .style("text-anchor", "end")
+                    .attr("transform", "rotate(-45)")
+            }
+            else {
+
+                const boroughsWithData = new Set(data.map(d => d.borough))
+
+                boroughs.forEach((neighborhoods, borough) => {
+
+                    if (boroughsWithData.has(borough)) {
+                        var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2;
+                    
+                        svg.append("text")
+                            .attr("class", "BoroughText")
+                            .attr("x", avgXPosition - 5)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 30)
+                            .attr("text-anchor", "middle")
+                            .style("font-size", "14px")
+                            .text(borough)
+                    }
+                })
+                
+                xAxisGen = d3.axisBottom().scale(xScale)
+                xAxis.call(xAxisGen)
+
+                xAxis.selectAll("text")
+                     .text("")
+            }
     }
     
     window.updateBarChartByBorough = updateBarChartByBorough
+    window.updateBarChartByRoomType = updateBarChartByRoomType
 
     var title = svg.append("text")
                    .attr("x", dimensions.width / 2)
