@@ -125,8 +125,8 @@ d3.csv("Airbnb_Open_Data.csv").then(
                           .attr("transform", `translate(${dimensions.width - 100}, 10)`)
                           .attr("class", "legend")
 
-        const legendRectSize = 10; 
-        const legendSpacing = 5;       
+        const legendRectSize = 10 
+        const legendSpacing = 5       
         
         legend.selectAll("rect")
               .data(roomTypes) 
@@ -158,26 +158,26 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
     //code goes here
     function updateScatterPlotByBorough(borough){
-        let filteredData;
-    
-        if (borough === "All") {
-            filteredData = dataset; 
-        } else {
-            filteredData = dataset.filter(d => d["neighbourhood group"] === borough);
-        }
+
+        var selectedData = dataset.filter(d => {
+            return d["neighbourhood group"] === borough
+        })
 
         //remove old circles
-        svg.selectAll("circle").remove();
+        svg.selectAll("circle").remove()
         
         //replot graph
         const groupedData = d3.flatRollup(
-            filteredData,
+            selectedData,
             v => d3.mean(v, d => d['service fee']),
             d => d['minimum nights'],
             d => d['room type']
         ).map(([minNights, roomType, avgServiceFee]) => ({
             minNights, roomType, avgServiceFee
         }))
+
+        yScale.domain(d3.extent(groupedData, d => d.minNights))
+        yAxis.call(d3.axisLeft(yScale))
     
         // Re-draw circles
         svg.selectAll("circle")
@@ -194,12 +194,55 @@ d3.csv("Airbnb_Open_Data.csv").then(
                             <strong>Room Type:</strong> ${d.roomType} `)
                        
                        .style("left", `${event.pageX + 10}px`)
-                       .style("top", `${event.pageY + 10}px`);
+                       .style("top", `${event.pageY + 10}px`)
             })
-            .on("mouseout", () => tooltip.style("opacity", 0));
+            .on("mouseout", () => tooltip.style("opacity", 0))
+    }
+
+    function updateScatterPlotByNeighborhood(selectedNeighborhood){
+    
+        var selectedData = dataset.filter(d => {
+            return d.neighbourhood === selectedNeighborhood
+        })
+
+        //remove old circles
+        svg.selectAll("circle").remove()
+        
+        //replot graph
+        const groupedData = d3.flatRollup(
+            selectedData,
+            v => d3.mean(v, d => d['service fee']),
+            d => d['minimum nights'],
+            d => d['room type']
+        ).map(([minNights, roomType, avgServiceFee]) => ({
+            minNights, roomType, avgServiceFee
+        }))
+
+        yScale.domain(d3.extent(groupedData, d => d.minNights))
+        yAxis.call(d3.axisLeft(yScale))
+    
+        // Re-draw circles
+        svg.selectAll("circle")
+            .data(groupedData)
+            .enter().append("circle")
+            .attr("r", 3)
+            .attr("fill", d => colorScale(d.roomType))
+            .attr("cx", d => xScale(d.avgServiceFee))
+            .attr("cy", d => yScale(d.minNights))
+            .on("mouseover", (event, d) => {
+                tooltip.style("opacity", 1)
+                       .html(`<strong>Minimum Nights:</strong> ${d.minNights}<br>
+                            <strong>Average Service Fee:</strong> $${d.avgServiceFee.toFixed(2)}<br>
+                            <strong>Room Type:</strong> ${d.roomType} `)
+                       
+                       .style("left", `${event.pageX + 10}px`)
+                       .style("top", `${event.pageY + 10}px`)
+            })
+            .on("mouseout", () => tooltip.style("opacity", 0))
     }  
     
     window.updateScatterPlotByBorough = updateScatterPlotByBorough
+    window.updateScatterPlotByNeighborhood = updateScatterPlotByNeighborhood
 
     }
     

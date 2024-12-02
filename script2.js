@@ -134,7 +134,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
     function updateBarChartByBorough(borough) {
         let filteredData = (borough === "All") 
             ? dataset 
-            : dataset.filter(d => d["neighbourhood group"] === borough);
+            : dataset.filter(d => d["neighbourhood group"] === borough)
     
         // Group data by borough and neighborhood and calculate average review rating
         var avgReviewByNeighborhood = d3.rollup(
@@ -142,23 +142,23 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             v => d3.mean(v, d => +d["review rate number"]),
             d => d["neighbourhood group"],
             d => d["neighbourhood"]
-        );
+        )
     
         // Organize data into array of objects
         var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
             Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
-        ).flat();
+        ).flat()
     
         // Sort data by borough and average review
         data.sort((a, b) => 
             d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
-        );
+        )
     
         // Update x scale
         xScale.domain(data.map(d => d.neighbourhood))
     
         // Remove old bars
-        barsGroup.selectAll("rect").remove();
+        barsGroup.selectAll("rect").remove()
     
         // Add new bars
         barsGroup.selectAll("rect")
@@ -171,7 +171,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .attr("width", xScale.bandwidth())
             .attr("fill", d => colorScale(d.borough))
             .on("mouseover", function(d, i) {
-                d3.select(this).style("stroke", "black");
+                d3.select(this).style("stroke", "black")
                 tooltip.style("opacity", 1)
                     .html(`
                         <strong>Borough:</strong> ${i.borough}<br>
@@ -184,7 +184,11 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .on("mouseout", function() {
                 d3.select(this).style("stroke", "none")
                 tooltip.style("opacity", 0)
-            });
+            })
+            .on("click", function(d, i) {
+                updateMapByNeighborhood(i.neighbourhood)
+                updateScatterPlotByNeighborhood(i.neighbourhood)
+            })
 
             xAxisText.remove()
             svg.selectAll(".BoroughText").remove()
