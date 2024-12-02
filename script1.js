@@ -163,11 +163,14 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
     //code goes here
     function updateScatterPlot(borough){
-        //alert(borough);
+        let filteredData;
+    
+        if (borough === "All") {
+            filteredData = dataset; 
+        } else {
+            filteredData = dataset.filter(d => d["neighbourhood group"] === borough);
+        }
 
-        let filteredData = dataset.filter(d => d["neighbourhood group"] === borough);
-
-        //console.log(filteredData);
 
 
         //remove old circles
@@ -222,5 +225,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
     window.updateScatterPlot = updateScatterPlot;
                        
     }
+
+    
 )
 

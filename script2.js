@@ -119,5 +119,6 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
         var filteredData = selectedBorough === "All" ? dataset : dataset.filter(d => d["neighbourhood group"] === selectedBorough)
         updateChart(filteredData)
+        updateScatterPlot(selectedBorough)
     })
 })
