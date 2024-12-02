@@ -172,6 +172,9 @@ d3.csv("Airbnb_Open_Data.csv").then(
     //code goes here
     function updateScatterPlotByBorough(SelectedBorough){
 
+        legend.selectAll("text").style("font-weight", null)
+        legend.selectAll("rect").style("stroke", "none")
+
         filteredData = dataset.filter(d => {
             return d["neighbourhood group"] === SelectedBorough
         })
@@ -269,7 +272,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
         legend.selectAll("rect")
               .on("click", function(d, i) {
-                    legend.selectAll("text").style("font-weight", "none")
+                    legend.selectAll("text").style("font-weight", null)
                     legend.selectAll("rect").style("stroke", "none")
                     legend.selectAll("text").filter(d => d === i)
                                             .style("font-weight", "bold")
