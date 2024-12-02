@@ -213,20 +213,6 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .style("top", `${event.pageY + 10}px`)
             })
             .on("mouseout", () => tooltip.style("opacity", 0))
-
-        legend.selectAll("rect")
-              .on("click", function(d, i) {
-                    legend.selectAll("text").style("font-weight", null)
-                    legend.selectAll("rect").style("stroke", "none")
-                    legend.selectAll("text").filter(d => d === i)
-                                            .style("font-weight", "bold")
-                    legend.selectAll("rect").filter(d => d === i)
-                                            .style("stroke", "black")
-                                            .style("stroke-width", "2")
-                    updateScatterPlotByRoomType(i)
-                    updateMapByRoomType(i)
-                    updateBarChartByRoomType(i)
-               })
     }
 
     function updateScatterPlotByNeighborhood(selectedNeighborhood){
@@ -269,20 +255,6 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .style("top", `${event.pageY + 10}px`)
             })
             .on("mouseout", () => tooltip.style("opacity", 0))
-
-        legend.selectAll("rect")
-              .on("click", function(d, i) {
-                    legend.selectAll("text").style("font-weight", null)
-                    legend.selectAll("rect").style("stroke", "none")
-                    legend.selectAll("text").filter(d => d === i)
-                                            .style("font-weight", "bold")
-                    legend.selectAll("rect").filter(d => d === i)
-                                            .style("stroke", "black")
-                                            .style("stroke-width", "2")
-                    updateScatterPlotByRoomType(i)
-                    updateMapByRoomType(i)
-                    updateBarChartByRoomType(i)
-               })
     }
 
     var roomTypeFilteredData = filteredData
