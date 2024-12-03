@@ -127,17 +127,49 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     })
 
         var filteredData = dataset
+        var currentBorough = null
     
         function updateMapByBorough(selectedBorough) {
 
-            svg.selectAll(".points").remove()
+            currentBorough = selectedBorough
+            currentNeighborhood = null
 
-            filteredData = dataset.filter(d => {
-                return mapdata.features.some(borough =>
-                    borough.properties['boro_name'] === selectedBorough &&
-                    d3.geoContains(borough, [+d.long, +d.lat])
-                )
-            })
+            if(currentNeighborhood === null && currentRoomType === null){
+                filteredData = dataset.filter(d => {
+                    return mapdata.features.some(borough =>
+                        borough.properties['boro_name'] === selectedBorough &&
+                        d3.geoContains(borough, [+d.long, +d.lat])
+                    )
+                })
+            }
+            else if(currentNeighborhood !== null && currentRoomType !== null) {
+                filteredData = dataset.filter(d => {
+                    return mapdata.features.some(borough =>
+                        borough.properties['boro_name'] === selectedBorough &&
+                        d3.geoContains(borough, [+d.long, +d.lat]) &&
+                        d["room type"] === currentRoomType
+                    )
+                })
+            }
+            else if(currentRoomType !== null) {
+                filteredData = dataset.filter(d => {
+                    return mapdata.features.some(borough =>
+                        borough.properties['boro_name'] === selectedBorough &&
+                        d3.geoContains(borough, [+d.long, +d.lat]) &&
+                        d["room type"] === currentRoomType
+                    )
+                })
+            }
+            else {
+                filteredData = dataset.filter(d => {
+                    return mapdata.features.some(borough =>
+                        borough.properties['boro_name'] === selectedBorough &&
+                        d3.geoContains(borough, [+d.long, +d.lat])
+                    )
+                })
+            }
+
+            svg.selectAll(".points").remove()
             
             svg.selectAll(".points")
                     .data(filteredData)
@@ -154,7 +186,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     })
                     .attr("r", 2)
                     .attr("fill", d => colorScale(+d.price))
-                    .on("mouseover", function(event, i){
+                    .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
                         tooltip.style("opacity", 1)
                                 .html(`
@@ -165,8 +197,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                     <strong>Review Rate Number:</strong> ${i["review rate number"]}<br>
                                     <strong>Construction Year:</strong> ${i["Construction year"]}<br>
                                 `)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY + 10) + "px")
+                                .style("left", (d.pageX + 10) + "px")
+                                .style("top", (d.pageY + 10) + "px")
                     })
                     .on("mouseout", function(){
                         d3.select(this).style("stroke", "none")
@@ -175,13 +207,38 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     
         }
 
+        var currentNeighborhood = null
+
         function updateMapByNeighborhood(selectedNeighborhood) {
 
-            svg.selectAll(".points").remove()
+            currentNeighborhood = selectedNeighborhood
 
-            filteredData = dataset.filter(d => {
-                return d.neighbourhood === selectedNeighborhood
-            })
+            if(currentBorough === null && currentRoomType === null){
+                filteredData = dataset.filter(d => {
+                    return d.neighbourhood === selectedNeighborhood
+                })
+            }
+            else if(currentBorough !== null && currentRoomType !== null) {
+                filteredData = dataset.filter(d => {
+                    return d.neighbourhood === selectedNeighborhood &&
+                    d["neighbourhood group"] === currentBorough &&
+                    d["room type"] === currentRoomType
+                })
+            }
+            else if(currentRoomType !== null) {
+                filteredData = dataset.filter(d => {
+                    return d.neighbourhood === selectedNeighborhood &&
+                    d["room type"] === currentRoomType
+                })
+            }
+            else {
+                filteredData = dataset.filter(d => {
+                    return d.neighbourhood === selectedNeighborhood &&
+                    d["neighbourhood group"] === currentBorough
+                })
+            }
+
+            svg.selectAll(".points").remove()
             
             svg.selectAll(".points")
                     .data(filteredData)
@@ -198,7 +255,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     })
                     .attr("r", 2)
                     .attr("fill", d => colorScale(+d.price))
-                    .on("mouseover", function(event, i){
+                    .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
                         tooltip.style("opacity", 1)
                                 .html(`
@@ -209,8 +266,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                     <strong>Review Rate Number:</strong> ${i["review rate number"]}<br>
                                     <strong>Construction Year:</strong> ${i["Construction year"]}<br>
                                 `)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY + 10) + "px")
+                                .style("left", (d.pageX + 10) + "px")
+                                .style("top", (d.pageY + 10) + "px")
                     })
                     .on("mouseout", function(){
                         d3.select(this).style("stroke", "none")
@@ -220,17 +277,40 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         }
 
         var roomTypeFilteredData = filteredData
+        var currentRoomType = null
 
         function updateMapByRoomType(selectedRoomType) {
 
-            svg.selectAll(".points").remove()
+            currentRoomType = selectedRoomType
 
-            roomTypeFilteredData = filteredData.filter(d => {
-                return d["room type"] === selectedRoomType
-            })
+            if(currentBorough === null && currentNeighborhood === null){
+                filteredData = dataset.filter(d => {
+                    return d["room type"] === selectedRoomType
+                })
+            }
+            else if(currentBorough !== null && currentNeighborhood !== null) {
+                filteredData = dataset.filter(d => {
+                    return d["room type"] === selectedRoomType &&
+                    d["neighbourhood group"] === currentBorough &&
+                    d.neighbourhood === currentNeighborhood
+                })
+            }
+            else if(currentNeighborhood !== null) {
+                filteredData = dataset.filter(d => {
+                    return d["room type"] === selectedRoomType && d.neighbourhood === currentNeighborhood
+                })
+            }
+            else {
+                filteredData = dataset.filter(d => {
+                    return d["room type"] === selectedRoomType &&
+                    d["neighbourhood group"] === currentBorough
+                })
+            }
+
+            svg.selectAll(".points").remove()
             
             svg.selectAll(".points")
-                    .data(roomTypeFilteredData)
+                    .data(filteredData)
                     .enter()
                     .append("circle")
                     .attr("class", "points")
@@ -244,7 +324,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     })
                     .attr("r", 2)
                     .attr("fill", d => colorScale(+d.price))
-                    .on("mouseover", function(event, i){
+                    .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
                         tooltip.style("opacity", 1)
                                 .html(`
@@ -255,8 +335,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                                     <strong>Review Rate Number:</strong> ${i["review rate number"]}<br>
                                     <strong>Construction Year:</strong> ${i["Construction year"]}<br>
                                 `)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY + 10) + "px")
+                                .style("left", (d.pageX + 10) + "px")
+                                .style("top", (d.pageY + 10) + "px")
                     })
                     .on("mouseout", function(){
                         d3.select(this).style("stroke", "none")
