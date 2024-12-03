@@ -401,8 +401,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         }
 
         function zoomed(event) {
-            const { transform } = event;
-            svg.select("g").attr("transform", transform);
+            const { transform } = event
+            svg.select("g").attr("transform", transform)
             svg.selectAll(".points")
                .attr("transform", transform)
             svg.selectAll(".boroughs").attr("stroke-width", 1 / transform.k)

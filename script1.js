@@ -126,7 +126,9 @@ d3.csv("Airbnb_Open_Data.csv").then(
                           .attr("class", "legend")
 
         const legendRectSize = 10 
-        const legendSpacing = 5       
+        const legendSpacing = 5   
+        
+        var currentlySelectedRoomType = null
         
         legend.selectAll("rect")
               .data(roomTypes) 
@@ -137,6 +139,17 @@ d3.csv("Airbnb_Open_Data.csv").then(
               .attr("width", legendRectSize)
               .attr("height", legendRectSize)
               .attr("fill", d => colorScale(d))
+              .on("mouseover", function() {
+                    if(currentlySelectedRoomType !== this) {
+                        d3.select(this).style("stroke", "black")
+                                       .style("stroke-width", "1")
+                    }
+              })
+              .on("mouseout", function() {
+                if(currentlySelectedRoomType !== this) {
+                    d3.select(this).style("stroke", "none")
+                }
+              })
               .on("click", function(d, i) {
                 legend.selectAll("text").style("font-weight", null)
                 legend.selectAll("rect").style("stroke", "none")
@@ -145,6 +158,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                 legend.selectAll("rect").filter(d => d === i)
                                         .style("stroke", "black")
                                         .style("stroke-width", "2")
+                currentlySelectedRoomType = this
                 updateScatterPlotByRoomType(i)
                 updateMapByRoomType(i)
                 updateBarChartByRoomType(i)

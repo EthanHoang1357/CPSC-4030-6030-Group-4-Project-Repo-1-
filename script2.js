@@ -271,7 +271,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .attr("height", d => dimensions.height - yScale(d.avgReview) - dimensions.margin.bottom)
             .attr("width", xScale.bandwidth())
             .attr("fill", d => colorScale(d.borough))
-            .on("mouseover", function(d, i) {
+            .on("mouseover", function() {
                 if(CurrentlySelectedNeighborhood !== this) {
                     d3.select(this).style("stroke", "black")
                 }
