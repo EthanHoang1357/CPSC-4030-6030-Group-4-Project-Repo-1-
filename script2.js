@@ -42,7 +42,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .domain([0, 5])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
-    var colorScale = d3.scaleOrdinal(["#170083", "#EB0086", "#6D1788", "#F77F00", "#BEAF0C"])
+    var colorScale = d3.scaleOrdinal(["#1E90FF", "#EB0086", "#8A2BE2", "#F77F00", "#BEAF0C"])
 
     var tooltip = d3.select("body")
                     .append("div")
@@ -301,10 +301,21 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 updateScatterPlotByNeighborhood(i.neighbourhood)
             })
 
+            console.log(CurrentlySelectedNeighborhood)
+
+            if (CurrentlySelectedNeighborhood) {
+                barsGroup.selectAll("rect")
+                         .filter(function(d, i) {
+                            return d.neighbourhood === currentNeighborhood
+                         })
+                         .style("stroke", "black")
+                         .style("stroke-width", "3")
+            }
+
+
             if(currentBorough !== null) {
 
                 xAxisText.remove()
-                //svg.selectAll(".BoroughText").remove()
 
                 xAxisGen = d3.axisBottom().scale(xScale)
 

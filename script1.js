@@ -7,7 +7,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
             margin:{
                 top: 50,
                 bottom: 50,
-                right: 10,
+                right: 100,
                 left: 55
             }
         }
@@ -122,7 +122,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                           })
 
         const legend = svg.append("g")
-                          .attr("transform", `translate(${dimensions.width - 100}, 10)`)
+                          .attr("transform", `translate(${dimensions.width - 100}, 130)`)
                           .attr("class", "legend")
 
         const legendRectSize = 10 
@@ -198,9 +198,6 @@ d3.csv("Airbnb_Open_Data.csv").then(
                 return d["neighbourhood group"] === SelectedBorough
             })
         }
-
-        legend.selectAll("text").style("font-weight", null)
-        legend.selectAll("rect").style("stroke", "none")
 
         //remove old circles
         svg.selectAll("circle").remove()
