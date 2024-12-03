@@ -126,6 +126,11 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                             d3.selectAll(".boroughs").style("stroke-width", "1")
                     })
 
+        function updateListingsCount(count) {
+            d3.select('#ListingsCount')
+              .text(`Listings Count: ${count}`)
+        }
+
         var filteredData = dataset
         var currentBorough = null
     
@@ -205,6 +210,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         tooltip.style("opacity", 0)
                     })
                     
+                    updateListingsCount(filteredData.length)
         }
 
         var currentNeighborhood = null
@@ -273,7 +279,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         d3.select(this).style("stroke", "none")
                         tooltip.style("opacity", 0)
                     })
-                    
+
+                    updateListingsCount(filteredData.length)
         }
 
         var roomTypeFilteredData = filteredData
@@ -343,6 +350,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         tooltip.style("opacity", 0)
                     })
                     
+                    updateListingsCount(filteredData.length)
         }
 
         window.updateMapByNeighborhood = updateMapByNeighborhood
@@ -354,5 +362,14 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                        .attr("text-anchor", "middle")
                        .style("font-size", "24px")
                        .text("Map of AirBNBs in NYC")
+
+        var ListingsCount = svg.append('text')
+                         .attr("id", 'ListingsCount')
+                         .attr("x", 50)
+                         .attr("y", 70)
+                         .attr("dx", "-.8em")
+                         .attr("dy", ".15em")
+                         .attr("font-family", "sans-serif")
+                         .text(`Listings Count: ${dataset.length}`)
     })
 })
