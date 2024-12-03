@@ -131,6 +131,12 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
               .text(`Listings Count: ${count}`)
         }
 
+        var zoom = d3.zoom()
+                     .scaleExtent([1, 8])
+                     .on("zoom", zoomed)
+
+        svg.call(zoom)
+
         var filteredData = dataset
         var currentBorough = null
     
@@ -189,7 +195,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         let coords = projection([+d.long, +d.lat])
                         return coords ? coords[1] : null
                     })
-                    .attr("r", 2)
+                    .attr("r", 1.5)
                     .attr("fill", d => colorScale(+d.price))
                     .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
@@ -209,6 +215,19 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         d3.select(this).style("stroke", "none")
                         tooltip.style("opacity", 0)
                     })
+
+                    var borough = mapdata.features.find(b => b.properties['boro_name'] === selectedBorough)
+                    var bounds = pathGenerator.bounds(borough)
+                    var [[x0, y0], [x1, y1]] = bounds
+
+                    svg.transition().duration(750).call(
+                        zoom.transform,
+                        d3.zoomIdentity
+                            .translate(dimensions.width / 2, dimensions.height / 2)
+                            .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / dimensions.width, (y1 - y0) / dimensions.height)))
+                            .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                        [dimensions.width / 2, dimensions.height / 2]
+                    )
                     
                     updateListingsCount(filteredData.length)
         }
@@ -259,7 +278,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         let coords = projection([+d.long, +d.lat])
                         return coords ? coords[1] : null
                     })
-                    .attr("r", 2)
+                    .attr("r", 1.5)
                     .attr("fill", d => colorScale(+d.price))
                     .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
@@ -279,6 +298,19 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         d3.select(this).style("stroke", "none")
                         tooltip.style("opacity", 0)
                     })
+
+                    var borough = mapdata.features.find(b => b.properties['boro_name'] === currentBorough)
+                    var bounds = pathGenerator.bounds(borough)
+                    var [[x0, y0], [x1, y1]] = bounds
+
+                    svg.transition().duration(750).call(
+                        zoom.transform,
+                        d3.zoomIdentity
+                            .translate(dimensions.width / 2, dimensions.height / 2)
+                            .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / dimensions.width, (y1 - y0) / dimensions.height)))
+                            .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                        [dimensions.width / 2, dimensions.height / 2]
+                    )
 
                     updateListingsCount(filteredData.length)
         }
@@ -329,7 +361,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         let coords = projection([+d.long, +d.lat])
                         return coords ? coords[1] : null
                     })
-                    .attr("r", 2)
+                    .attr("r", 1.5)
                     .attr("fill", d => colorScale(+d.price))
                     .on("mouseover", function(d, i){
                         d3.select(this).style("stroke", "black")
@@ -349,8 +381,31 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         d3.select(this).style("stroke", "none")
                         tooltip.style("opacity", 0)
                     })
+
+                    if(currentBorough !== null) {
+                        var borough = mapdata.features.find(b => b.properties['boro_name'] === currentBorough)
+                        var bounds = pathGenerator.bounds(borough)
+                        var [[x0, y0], [x1, y1]] = bounds
+
+                        svg.transition().duration(750).call(
+                            zoom.transform,
+                            d3.zoomIdentity
+                                .translate(dimensions.width / 2, dimensions.height / 2)
+                                .scale(Math.min(8, 0.9 / Math.max((x1 - x0) / dimensions.width, (y1 - y0) / dimensions.height)))
+                                .translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+                            [dimensions.width / 2, dimensions.height / 2]
+                        )
+                    }
                     
                     updateListingsCount(filteredData.length)
+        }
+
+        function zoomed(event) {
+            const { transform } = event;
+            svg.select("g").attr("transform", transform);
+            svg.selectAll(".points")
+               .attr("transform", transform)
+            svg.selectAll(".boroughs").attr("stroke-width", 1 / transform.k)
         }
 
         window.updateMapByNeighborhood = updateMapByNeighborhood

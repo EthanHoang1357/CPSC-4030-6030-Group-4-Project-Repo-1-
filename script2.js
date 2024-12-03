@@ -301,8 +301,6 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 updateScatterPlotByNeighborhood(i.neighbourhood)
             })
 
-            console.log(CurrentlySelectedNeighborhood)
-
             if (CurrentlySelectedNeighborhood) {
                 barsGroup.selectAll("rect")
                          .filter(function(d, i) {
