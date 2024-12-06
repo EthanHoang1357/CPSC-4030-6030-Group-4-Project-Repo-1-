@@ -7,7 +7,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
             margin:{
                 top: 50,
                 bottom: 50,
-                right: 10,
+                right: 100,
                 left: 55
             }
         }
@@ -122,11 +122,13 @@ d3.csv("Airbnb_Open_Data.csv").then(
                           })
 
         const legend = svg.append("g")
-                          .attr("transform", `translate(${dimensions.width - 100}, 10)`)
+                          .attr("transform", `translate(${dimensions.width - 100}, 130)`)
                           .attr("class", "legend")
 
         const legendRectSize = 10 
-        const legendSpacing = 5       
+        const legendSpacing = 5   
+        
+        var currentlySelectedRoomType = null
         
         legend.selectAll("rect")
               .data(roomTypes) 
@@ -137,6 +139,17 @@ d3.csv("Airbnb_Open_Data.csv").then(
               .attr("width", legendRectSize)
               .attr("height", legendRectSize)
               .attr("fill", d => colorScale(d))
+              .on("mouseover", function() {
+                    if(currentlySelectedRoomType !== this) {
+                        d3.select(this).style("stroke", "black")
+                                       .style("stroke-width", "1")
+                    }
+              })
+              .on("mouseout", function() {
+                if(currentlySelectedRoomType !== this) {
+                    d3.select(this).style("stroke", "none")
+                }
+              })
               .on("click", function(d, i) {
                 legend.selectAll("text").style("font-weight", null)
                 legend.selectAll("rect").style("stroke", "none")
@@ -145,6 +158,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                 legend.selectAll("rect").filter(d => d === i)
                                         .style("stroke", "black")
                                         .style("stroke-width", "2")
+                currentlySelectedRoomType = this
                 updateScatterPlotByRoomType(i)
                 updateMapByRoomType(i)
                 updateBarChartByRoomType(i)
@@ -168,16 +182,36 @@ d3.csv("Airbnb_Open_Data.csv").then(
                        .text("Average Service Fee vs Minimum Nights")
 
     var filteredData = dataset
+    var currentBorough = null
 
     //code goes here
     function updateScatterPlotByBorough(SelectedBorough){
 
-        legend.selectAll("text").style("font-weight", null)
-        legend.selectAll("rect").style("stroke", "none")
+        currentBorough = SelectedBorough
+        currentNeighborhood = null
 
-        filteredData = dataset.filter(d => {
-            return d["neighbourhood group"] === SelectedBorough
-        })
+        if(currentNeighborhood === null && currentRoomType === null){
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough
+            })
+        }
+        else if(currentNeighborhood !== null && currentRoomType !== null) {
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough &&
+                d["room type"] === currentRoomType
+            })
+        }
+        else if(currentRoomType !== null) {
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough &&
+                d["room type"] === currentRoomType
+            })
+        }
+        else {
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough
+            })
+        }
 
         //remove old circles
         svg.selectAll("circle").remove()
@@ -203,23 +237,52 @@ d3.csv("Airbnb_Open_Data.csv").then(
             .attr("fill", d => colorScale(d.roomType))
             .attr("cx", d => xScale(d.avgServiceFee))
             .attr("cy", d => yScale(d.minNights))
-            .on("mouseover", (event, d) => {
+            .on("mouseover", function(d, i) {
+                d3.select(this).style("stroke", "black")
                 tooltip.style("opacity", 1)
-                       .html(`<strong>Minimum Nights:</strong> ${d.minNights}<br>
-                            <strong>Average Service Fee:</strong> $${d.avgServiceFee.toFixed(2)}<br>
-                            <strong>Room Type:</strong> ${d.roomType} `)
+                       .html(`<strong>Minimum Nights:</strong> ${i.minNights}<br>
+                            <strong>Average Service Fee:</strong> $${i.avgServiceFee.toFixed(2)}<br>
+                            <strong>Room Type:</strong> ${i.roomType} `)
                        
-                       .style("left", `${event.pageX + 10}px`)
-                       .style("top", `${event.pageY + 10}px`)
+                       .style("left", `${d.pageX + 10}px`)
+                       .style("top", `${d.pageY + 10}px`)
             })
-            .on("mouseout", () => tooltip.style("opacity", 0))
+            .on("mouseout", function(d, i){
+                d3.select(this).style("stroke", "none")
+                tooltip.style("opacity", 0)
+          })
     }
+
+    var currentNeighborhood = null
 
     function updateScatterPlotByNeighborhood(selectedNeighborhood){
-    
-        filteredData = dataset.filter(d => {
-            return d.neighbourhood === selectedNeighborhood
-        })
+
+        currentNeighborhood = selectedNeighborhood
+
+        if(currentBorough === null && currentRoomType === null){
+            filteredData = dataset.filter(d => {
+                return d.neighbourhood === selectedNeighborhood
+            })
+        }
+        else if(currentBorough !== null && currentRoomType !== null) {
+            filteredData = dataset.filter(d => {
+                return d.neighbourhood === selectedNeighborhood &&
+                d["neighbourhood group"] === currentBorough &&
+                d["room type"] === currentRoomType
+            })
+        }
+        else if(currentRoomType !== null) {
+            filteredData = dataset.filter(d => {
+                return d.neighbourhood === selectedNeighborhood &&
+                d["room type"] === currentRoomType
+            })
+        }
+        else {
+            filteredData = dataset.filter(d => {
+                return d.neighbourhood === selectedNeighborhood &&
+                d["neighbourhood group"] === currentBorough
+            })
+        }
 
         //remove old circles
         svg.selectAll("circle").remove()
@@ -245,32 +308,59 @@ d3.csv("Airbnb_Open_Data.csv").then(
             .attr("fill", d => colorScale(d.roomType))
             .attr("cx", d => xScale(d.avgServiceFee))
             .attr("cy", d => yScale(d.minNights))
-            .on("mouseover", (event, d) => {
+            .on("mouseover", function(d, i) {
+                d3.select(this).style("stroke", "black")
                 tooltip.style("opacity", 1)
-                       .html(`<strong>Minimum Nights:</strong> ${d.minNights}<br>
-                            <strong>Average Service Fee:</strong> $${d.avgServiceFee.toFixed(2)}<br>
-                            <strong>Room Type:</strong> ${d.roomType} `)
+                       .html(`<strong>Minimum Nights:</strong> ${i.minNights}<br>
+                            <strong>Average Service Fee:</strong> $${i.avgServiceFee.toFixed(2)}<br>
+                            <strong>Room Type:</strong> ${i.roomType} `)
                        
-                       .style("left", `${event.pageX + 10}px`)
-                       .style("top", `${event.pageY + 10}px`)
+                       .style("left", `${d.pageX + 10}px`)
+                       .style("top", `${d.pageY + 10}px`)
             })
-            .on("mouseout", () => tooltip.style("opacity", 0))
+            .on("mouseout", function(d, i){
+                d3.select(this).style("stroke", "none")
+                tooltip.style("opacity", 0)
+          })
     }
 
-    var roomTypeFilteredData = filteredData
+    var currentRoomType = null
     
     function updateScatterPlotByRoomType(selectedRoomType){
-    
-        roomTypeFilteredData = filteredData.filter(d => {
-            return d["room type"] === selectedRoomType
-        })
+
+        currentRoomType = selectedRoomType
+
+        if(currentBorough === null && currentNeighborhood === null){
+            filteredData = dataset.filter(d => {
+                return d["room type"] === selectedRoomType
+            })
+        }
+        else if(currentBorough !== null && currentNeighborhood !== null) {
+            filteredData = dataset.filter(d => {
+                return d["room type"] === selectedRoomType &&
+                d["neighbourhood group"] === currentBorough &&
+                d.neighbourhood === currentNeighborhood
+            })
+        }
+        else if(currentNeighborhood !== null) {
+            filteredData = dataset.filter(d => {
+                return d["room type"] === selectedRoomType &&
+                d.neighbourhood === currentNeighborhood
+            })
+        }
+        else {
+            filteredData = dataset.filter(d => {
+                return d["room type"] === selectedRoomType &&
+                d["neighbourhood group"] === currentBorough
+            })
+        }
 
         //remove old circles
         svg.selectAll("circle").remove()
         
         //replot graph
         const groupedData = d3.flatRollup(
-            roomTypeFilteredData,
+            filteredData,
             v => d3.mean(v, d => d['service fee']),
             d => d['minimum nights'],
             d => d['room type']
@@ -289,16 +379,20 @@ d3.csv("Airbnb_Open_Data.csv").then(
             .attr("fill", d => colorScale(d.roomType))
             .attr("cx", d => xScale(d.avgServiceFee))
             .attr("cy", d => yScale(d.minNights))
-            .on("mouseover", (event, d) => {
+            .on("mouseover", function(d, i) {
+                d3.select(this).style("stroke", "black")
                 tooltip.style("opacity", 1)
-                       .html(`<strong>Minimum Nights:</strong> ${d.minNights}<br>
-                            <strong>Average Service Fee:</strong> $${d.avgServiceFee.toFixed(2)}<br>
-                            <strong>Room Type:</strong> ${d.roomType} `)
+                       .html(`<strong>Minimum Nights:</strong> ${i.minNights}<br>
+                            <strong>Average Service Fee:</strong> $${i.avgServiceFee.toFixed(2)}<br>
+                            <strong>Room Type:</strong> ${i.roomType} `)
                        
-                       .style("left", `${event.pageX + 10}px`)
-                       .style("top", `${event.pageY + 10}px`)
+                       .style("left", `${d.pageX + 10}px`)
+                       .style("top", `${d.pageY + 10}px`)
             })
-            .on("mouseout", () => tooltip.style("opacity", 0))
+            .on("mouseout", function(d, i){
+                d3.select(this).style("stroke", "none")
+                tooltip.style("opacity", 0)
+          })
     } 
     
     window.updateScatterPlotByBorough = updateScatterPlotByBorough

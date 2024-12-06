@@ -42,7 +42,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                    .domain([0, 5])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
-    var colorScale = d3.scaleOrdinal(["#170083", "#EB0086", "#6D1788", "#F77F00", "#BEAF0C"])
+    var colorScale = d3.scaleOrdinal(["#1E90FF", "#EB0086", "#8A2BE2", "#F77F00", "#BEAF0C"])
 
     var tooltip = d3.select("body")
                     .append("div")
@@ -126,14 +126,26 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         .text("Avg Review Rating")
 
     var filteredData = dataset
-    var NeighborhoodFilterTF = false
     var CurrentlySelectedNeighborhood = null
+    var currentBorough = null
+    var currentNeighborhood = null
 
     function updateBarChartByBorough(SelectedBorough) {
 
-        filteredData = dataset.filter(d => {
-            return d["neighbourhood group"] === SelectedBorough
-        })
+        currentBorough = SelectedBorough
+        currentNeighborhood = null
+
+        if(currentRoomType === null) {
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough
+            })
+        }
+        else {
+            filteredData = dataset.filter(d => {
+                return d["neighbourhood group"] === SelectedBorough &&
+                d["room type"] === currentRoomType
+            })
+        }
 
         var avgReviewByNeighborhood = d3.rollup(
             filteredData,
@@ -183,7 +195,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 tooltip.style("opacity", 0)
             })
             .on("click", function(d, i) {
-                NeighborhoodFilterTF = true
+                currentNeighborhood = i.neighbourhood
                 barsGroup.selectAll("rect").style("stroke", "none")
                                            .style("stroke-width", "1")
                 d3.select(this).style("stroke", "black")
@@ -212,17 +224,27 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 .style("font-size", "16px")
                 .text(SelectedBorough)
     }
-
-    var roomTypeFilteredData = filteredData
+    
+    var currentRoomType = null
 
     function updateBarChartByRoomType(SelectedRoomType) {
 
-        roomTypeFilteredData = filteredData.filter(d => {
-            return d["room type"] === SelectedRoomType
-        })
+        currentRoomType = SelectedRoomType
+
+        if(currentBorough === null) {
+            filteredData = dataset.filter(d => {
+                return d["room type"] === SelectedRoomType
+            })
+        }
+        else {
+            filteredData = dataset.filter(d => {
+                return d["room type"] === SelectedRoomType &&
+                d["neighbourhood group"] === currentBorough
+            })
+        }
     
         var avgReviewByNeighborhood = d3.rollup(
-            roomTypeFilteredData,
+            filteredData,
             v => d3.mean(v, d => +d["review rate number"]),
             d => d["neighbourhood group"],
             d => d["neighbourhood"]
@@ -249,7 +271,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .attr("height", d => dimensions.height - yScale(d.avgReview) - dimensions.margin.bottom)
             .attr("width", xScale.bandwidth())
             .attr("fill", d => colorScale(d.borough))
-            .on("mouseover", function(d, i) {
+            .on("mouseover", function() {
                 if(CurrentlySelectedNeighborhood !== this) {
                     d3.select(this).style("stroke", "black")
                 }
@@ -269,7 +291,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 tooltip.style("opacity", 0)
             })
             .on("click", function(d, i) {
-                NeighborhoodFilterTF = true
+                currentNeighborhood = i.neighbourhood
                 barsGroup.selectAll("rect").style("stroke", "none")
                                            .style("stroke-width", "1")
                 d3.select(this).style("stroke", "black")
@@ -279,9 +301,18 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 updateScatterPlotByNeighborhood(i.neighbourhood)
             })
 
-            svg.selectAll(".BoroughText").remove()
+            if (CurrentlySelectedNeighborhood) {
+                barsGroup.selectAll("rect")
+                         .filter(function(d, i) {
+                            return d.neighbourhood === currentNeighborhood
+                         })
+                         .style("stroke", "black")
+                         .style("stroke-width", "3")
+            }
 
-            if(NeighborhoodFilterTF === true) {
+
+            if(currentBorough !== null) {
+
                 xAxisText.remove()
 
                 xAxisGen = d3.axisBottom().scale(xScale)
@@ -291,15 +322,25 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     .style("font-size", "10px")
                     .style("text-anchor", "end")
                     .attr("transform", "rotate(-45)")
+
+                svg.append("text")
+                    .attr("class", "BoroughText")
+                    .attr("x", dimensions.width / 2)
+                    .attr("y", dimensions.height - 10)
+                    .attr("fill", "black")
+                    .style("font-size", "16px")
+                    .text(currentBorough)
             }
             else {
+
+                svg.selectAll(".BoroughText").remove()
 
                 const boroughsWithData = new Set(data.map(d => d.borough))
 
                 boroughs.forEach((neighborhoods, borough) => {
 
                     if (boroughsWithData.has(borough)) {
-                        var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2;
+                        var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2
                     
                         svg.append("text")
                             .attr("class", "BoroughText")
@@ -313,6 +354,10 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                 
                 xAxisGen = d3.axisBottom().scale(xScale)
                 xAxis.call(xAxisGen)
+                    .selectAll("text")
+                    .style("font-size", "10px")
+                    .style("text-anchor", "end")
+                    .attr("transform", "rotate(-45)")
 
                 xAxis.selectAll("text")
                      .text("")
