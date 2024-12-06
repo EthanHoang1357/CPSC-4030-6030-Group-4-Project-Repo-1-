@@ -23,6 +23,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         d => d["neighbourhood"]
     )
 
+    
     var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
         Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
     ).flat()
@@ -87,6 +88,9 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                     .call(xAxisGen)
                     .style("transform", `translateY(${dimensions.height - dimensions.margin.bottom}px)`)
 
+
+
+
     xAxis.selectAll("text").remove()
     var boroughs = d3.group(data, d => d.borough)
     boroughs.forEach((neighborhoods, borough) => {
@@ -101,6 +105,46 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .style("font-size", "14px")
             .text(borough)
     })
+
+
+var legend = svg.append("g")
+
+    legend.append("rect")
+        .attr("x", 175)
+        .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#1E90FF");
+    
+    legend.append("rect")
+        .attr("x", 500)
+        .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#EB0086");
+    
+    legend.append("rect")
+        .attr("x", 765)
+        .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#8A2BE2");
+    
+    legend.append("rect")
+        .attr("x", 1060)
+        .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#F77F00");
+    
+    legend.append("rect")
+        .attr("x", 1375)
+        .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("fill", "#BEAF0C");
+    
+
 
     var xAxisText = svg.append("text")
                        .attr("x", dimensions.width / 2)
@@ -131,6 +175,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
     var currentNeighborhood = null
 
     function updateBarChartByBorough(SelectedBorough) {
+        legend.selectAll("rect").remove()
 
         currentBorough = SelectedBorough
         currentNeighborhood = null
@@ -367,10 +412,43 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
     window.updateBarChartByBorough = updateBarChartByBorough
     window.updateBarChartByRoomType = updateBarChartByRoomType
 
+
     var title = svg.append("text")
                    .attr("x", dimensions.width / 2)
                    .attr("y", dimensions.margin.top / 2)
                    .attr("text-anchor", "middle")
                    .style("font-size", "24px")
                    .text("Avg Review Rating per Neighborhood")
+
+    //Initialize sort order
+    var isDescending = true
+
+    //Function to sort and update the bar chart
+    function sortBars() {
+        //Switches sort order when clicked
+        isDescending = !isDescending
+
+        //Update button text, if is descending switches to ascending and vice versa
+        d3.select("#sortButton").text(isDescending ? "Sort: Descending" : "Sort: Ascending")
+
+        //Sort data based on the current order, if isDescending is true data is sorted with d3.descending using avgReview and vice versa
+        data.sort((a, b) => 
+            isDescending ? d3.descending(a.avgReview, b.avgReview) : d3.ascending(a.avgReview, b.avgReview)
+        )
+
+        //Update xScale domain with sorted data
+        xScale.domain(data.map(d => d.neighbourhood))
+
+        // Update the bars
+        barsGroup.selectAll("rect")
+            //Use neighborhood as key to bind data
+            .data(data, d => d.neighbourhood)
+            .transition()
+            .duration(750)
+            .attr("x", d => xScale(d.neighbourhood))
+    }
+
+    // Attach event listener to the button
+    d3.select("#sortButton").on("click", sortBars)
+
 })
