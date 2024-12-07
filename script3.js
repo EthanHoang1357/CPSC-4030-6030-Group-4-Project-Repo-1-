@@ -125,48 +125,48 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                             tooltip.style("opacity", 0)
                             d3.selectAll(".boroughs").style("stroke-width", "1")
                     })
-   //legend dimensions
-    var legendWidth = 300;
-    var legendHeight = 20;
+    //legend dimensions
+        var legendWidth = 300;
+        var legendHeight = 20;
 
-    //used to position legend rectangle
-    var legendX = dimensions.width - legendWidth - dimensions.margin.right - 5;   
-    var legendY = dimensions.margin.top + 260;
+        //used to position legend rectangle
+        var legendX = dimensions.width - legendWidth - dimensions.margin.right - 5;   
+        var legendY = dimensions.margin.top + 260;
 
-    //append defs and a gradient for the legend
-    var defs = svg.append("defs");
+        //append defs and a gradient for the legend
+        var defs = svg.append("defs");
 
-    var linearGradient = defs.append("linearGradient")
-        .attr("id", "legend-gradient");
+        var linearGradient = defs.append("linearGradient")
+            .attr("id", "legend-gradient");
 
-    linearGradient.selectAll("stop")
-        .data(d3.range(0, 1.1, 0.1)) //divide into 10 stops
-        .enter()
-        .append("stop")
-        .attr("offset", d => `${d * 100}%`)
-        .attr("stop-color", d => colorScale(colorScale.domain()[0] + d * (colorScale.domain()[1] - colorScale.domain()[0])));
+        linearGradient.selectAll("stop")
+            .data(d3.range(0, 1.1, 0.1)) //divide into 10 stops
+            .enter()
+            .append("stop")
+            .attr("offset", d => `${d * 100}%`)
+            .attr("stop-color", d => colorScale(colorScale.domain()[0] + d * (colorScale.domain()[1] - colorScale.domain()[0])));
 
-    //add a rect with the gradient
-    svg.append("rect")
-        .attr("x", legendX)
-        .attr("y", legendY)
-        .attr("width", legendWidth)
-        .attr("height", legendHeight)
-        .style("fill", "url(#legend-gradient)");
+        //add a rect with the gradient
+        svg.append("rect")
+            .attr("x", legendX)
+            .attr("y", legendY)
+            .attr("width", legendWidth)
+            .attr("height", legendHeight)
+            .style("fill", "url(#legend-gradient)");
 
-    //add legend axis
-    var legendScale = d3.scaleLinear()
-        .domain(colorScale.domain())
-        .range([legendX, legendX + legendWidth]);
+        //add legend axis
+        var legendScale = d3.scaleLinear()
+            .domain(colorScale.domain())
+            .range([legendX, legendX + legendWidth]);
 
-    var legendAxis = d3.axisBottom(legendScale)
-        .ticks(6)
-        .tickFormat(d3.format("$"));
+        var legendAxis = d3.axisBottom(legendScale)
+            .ticks(6)
+            .tickFormat(d3.format("$"));
 
-    svg.append("g")
-        .attr("class", "legend-axis")
-        .attr("transform", `translate(0, ${legendY + legendHeight})`)
-        .call(legendAxis);
+        svg.append("g")
+            .attr("class", "legend-axis")
+            .attr("transform", `translate(0, ${legendY + legendHeight})`)
+            .call(legendAxis);
 
 
 
