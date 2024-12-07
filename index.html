@@ -19,11 +19,16 @@
         margin-left: -150px;
       }
 
-      button {
-        margin: 5px;
-        font-size: 24px;
-        text-align: center;
+      .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
         margin-left: -150px;
+      }
+
+      button {
+        margin-bottom: 10px;
+        font-size: 24px;
       }
 
       .dashboard {
@@ -61,8 +66,10 @@
   </head>
   <body>
     <h1>AirBnBs in New York City</h1>
-    <button id="sortButton">Sort: Descending Order, All Boroughs</button>
-    <button type="button" onclick = "location.reload()">Reset Filtering</button>
+    <div class="button-container">
+      <button type="button" onclick="location.reload()">Reset Filtering</button>
+      <button id="sortButton">Sort Bar Chart in Descending Order</button>
+    </div>
     <div class="dashboard">
       <svg id="Map"></svg>
       <svg id="ScatterPlot"></svg>

@@ -421,31 +421,34 @@ var legend = svg.append("g")
                    .text("Avg Review Rating per Neighborhood")
 
     //Initialize sort order
-    var isDescending = true
+    var isDescending = false
 
     //Function to sort and update the bar chart
     function sortBars() {
-        //Switches sort order when clicked
-        isDescending = !isDescending
 
-        //Update button text, if is descending switches to ascending and vice versa
-        d3.select("#sortButton").text(isDescending ? "Sort: Descending" : "Sort: Ascending")
+        if(currentBorough === null){
+            //Switches sort order when clicked
+            isDescending = !isDescending
 
-        //Sort data based on the current order, if isDescending is true data is sorted with d3.descending using avgReview and vice versa
-        data.sort((a, b) => 
-            isDescending ? d3.descending(a.avgReview, b.avgReview) : d3.ascending(a.avgReview, b.avgReview)
-        )
+            //Update button text, if is descending switches to ascending and vice versa
+            d3.select("#sortButton").text(!isDescending ? "Sort Bar Chart in Descending Order" : "Sort Bar Chart in Descending Order by Borough")
 
-        //Update xScale domain with sorted data
-        xScale.domain(data.map(d => d.neighbourhood))
+            //Sort data based on the current order, if isDescending is true data is sorted with d3.descending using avgReview and vice versa
+            data.sort((a, b) => 
+                isDescending ? d3.descending(a.avgReview, b.avgReview) : d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
+            )
 
-        // Update the bars
-        barsGroup.selectAll("rect")
-            //Use neighborhood as key to bind data
-            .data(data, d => d.neighbourhood)
-            .transition()
-            .duration(750)
-            .attr("x", d => xScale(d.neighbourhood))
+            //Update xScale domain with sorted data
+            xScale.domain(data.map(d => d.neighbourhood))
+
+            // Update the bars
+            barsGroup.selectAll("rect")
+                //Use neighborhood as key to bind data
+                .data(data, d => d.neighbourhood)
+                .transition()
+                .duration(750)
+                .attr("x", d => xScale(d.neighbourhood))
+        }
     }
 
     // Attach event listener to the button
