@@ -273,7 +273,7 @@ var legend = svg.append("g")
     var currentRoomType = null
 
     function updateBarChartByRoomType(SelectedRoomType) {
-
+        legend.selectAll("rect").remove()
         currentRoomType = SelectedRoomType
 
         if(currentBorough === null) {
@@ -394,6 +394,15 @@ var legend = svg.append("g")
                             .attr("text-anchor", "middle")
                             .style("font-size", "14px")
                             .text(borough)
+
+                        //Appends legend to the correct color
+                        legend.append("rect")
+                            .attr("x", avgXPosition - 65)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+                            .attr("width", 15)
+                            .attr("height", 15)
+                            //Not sure on how to cycle through the colors
+                            .attr("fill", "red");
                     }
                 })
                 
