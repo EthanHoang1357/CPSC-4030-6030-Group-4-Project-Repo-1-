@@ -275,7 +275,6 @@ var legend = svg.append("g")
     function updateBarChartByRoomType(SelectedRoomType) {
 
         currentRoomType = SelectedRoomType
-
         if(currentBorough === null) {
             filteredData = dataset.filter(d => {
                 return d["room type"] === SelectedRoomType
