@@ -175,6 +175,9 @@ var legend = svg.append("g")
     var currentNeighborhood = null
 
     function updateBarChartByBorough(SelectedBorough) {
+
+        d3.select("#sortButton").attr("disabled", true)
+
         legend.selectAll("rect").remove()
 
         currentBorough = SelectedBorough
@@ -299,9 +302,15 @@ var legend = svg.append("g")
             Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
         ).flat()
     
-        data.sort((a, b) => 
-            d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
-        )
+        if(isDescending === false){
+            data.sort((a, b) => 
+                d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
+            )
+        } else {
+            data.sort((a, b) => 
+                d3.descending(a.avgReview, b.avgReview)
+            )
+        }
     
         xScale.domain(data.map(d => d.neighbourhood))
     
@@ -382,39 +391,80 @@ var legend = svg.append("g")
 
                 const boroughsWithData = new Set(data.map(d => d.borough))
 
-                boroughs.forEach((neighborhoods, borough) => {
+                if(isDescending === false) {
 
-                    if (boroughsWithData.has(borough)) {
-                        var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2
+                    boroughs.forEach((neighborhoods, borough) => {
+
+                        if (boroughsWithData.has(borough)) {
+                            var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2
+                        
+                            svg.append("text")
+                                .attr("class", "BoroughText")
+                                .attr("x", avgXPosition - 5)
+                                .attr("y", dimensions.height - dimensions.margin.bottom + 30)
+                                .attr("text-anchor", "middle")
+                                .style("font-size", "14px")
+                                .text(borough)
+
+                            //Appends legend to the correct color
+                            legend.append("rect")
+                                .attr("x", avgXPosition - 65)
+                                .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+                                .attr("width", 15)
+                                .attr("height", 15)
+                                //Not sure on how to cycle through the colors
+                                .attr("fill", colorScale(borough));
+                        }
+                    })
                     
-                        svg.append("text")
-                            .attr("class", "BoroughText")
-                            .attr("x", avgXPosition - 5)
-                            .attr("y", dimensions.height - dimensions.margin.bottom + 30)
-                            .attr("text-anchor", "middle")
-                            .style("font-size", "14px")
-                            .text(borough)
+                    xAxisGen = d3.axisBottom().scale(xScale)
+                    xAxis.call(xAxisGen)
+                        .selectAll("text")
+                        .style("font-size", "10px")
+                        .style("text-anchor", "end")
+                        .attr("transform", "rotate(-45)")
 
-                        //Appends legend to the correct color
-                        legend.append("rect")
-                            .attr("x", avgXPosition - 65)
-                            .attr("y", dimensions.height - dimensions.margin.bottom + 15)
-                            .attr("width", 15)
-                            .attr("height", 15)
-                            //Not sure on how to cycle through the colors
-                            .attr("fill", "red");
-                    }
-                })
-                
-                xAxisGen = d3.axisBottom().scale(xScale)
-                xAxis.call(xAxisGen)
-                    .selectAll("text")
-                    .style("font-size", "10px")
-                    .style("text-anchor", "end")
-                    .attr("transform", "rotate(-45)")
+                    xAxis.selectAll("text")
+                        .text("")
+                } else {
 
-                xAxis.selectAll("text")
-                     .text("")
+                    const boroughsList = Array.from(boroughsWithData).sort()
+                    const spacing = (dimensions.width - dimensions.margin.left - dimensions.margin.right) / boroughsList.length
+
+                    boroughsList.forEach((borough, i) => {
+
+                        if (boroughsWithData.has(borough)) {
+                            var xPosition = dimensions.margin.left + (i * spacing) + spacing / 2
+                        
+                            svg.append("text")
+                                .attr("class", "BoroughText")
+                                .attr("x", xPosition)
+                                .attr("y", dimensions.height - dimensions.margin.bottom + 30)
+                                .attr("text-anchor", "middle")
+                                .style("font-size", "14px")
+                                .text(borough)
+
+                            //Appends legend to the correct color
+                            legend.append("rect")
+                                .attr("x", xPosition - 65)
+                                .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+                                .attr("width", 15)
+                                .attr("height", 15)
+                                //Not sure on how to cycle through the colors
+                                .attr("fill", colorScale(borough));
+                        }
+                    })
+                    
+                    xAxisGen = d3.axisBottom().scale(xScale)
+                    xAxis.call(xAxisGen)
+                        .selectAll("text")
+                        .style("font-size", "10px")
+                        .style("text-anchor", "end")
+                        .attr("transform", "rotate(-45)")
+
+                    xAxis.selectAll("text")
+                        .text("")
+                }
             }
     }
     
@@ -435,7 +485,19 @@ var legend = svg.append("g")
     //Function to sort and update the bar chart
     function sortBars() {
 
-        if(currentBorough === null){
+        if(currentBorough === null && currentRoomType === null){
+
+            var avgReviewByNeighborhood = d3.rollup(
+                filteredData,
+                v => d3.mean(v, d => +d["review rate number"]),
+                d => d["neighbourhood group"],
+                d => d["neighbourhood"]
+            )
+    
+            var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
+                Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
+            ).flat()
+
             //Switches sort order when clicked
             isDescending = !isDescending
 
@@ -457,6 +519,101 @@ var legend = svg.append("g")
                 .transition()
                 .duration(750)
                 .attr("x", d => xScale(d.neighbourhood))
+        }
+        else if(currentRoomType !== null) {
+
+            var avgReviewByNeighborhood = d3.rollup(
+                filteredData,
+                v => d3.mean(v, d => +d["review rate number"]),
+                d => d["neighbourhood group"],
+                d => d["neighbourhood"]
+            )
+    
+            var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
+                Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
+            ).flat()
+
+            //Switches sort order when clicked
+            isDescending = !isDescending
+
+            //Update button text, if is descending switches to ascending and vice versa
+            d3.select("#sortButton").text(!isDescending ? "Sort Bar Chart in Descending Order" : "Sort Bar Chart in Descending Order by Borough")
+
+            //Sort data based on the current order, if isDescending is true data is sorted with d3.descending using avgReview and vice versa
+            data.sort((a, b) => 
+                isDescending ? d3.descending(a.avgReview, b.avgReview) : d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview)
+            )
+
+            //Update xScale domain with sorted data
+            xScale.domain(data.map(d => d.neighbourhood))
+
+            // Update the bars
+            barsGroup.selectAll("rect")
+                //Use neighborhood as key to bind data
+                .data(data, d => d.neighbourhood)
+                .transition()
+                .duration(750)
+                .attr("x", d => xScale(d.neighbourhood))
+
+            svg.selectAll(".BoroughText").remove()
+            legend.selectAll("rect").remove()
+
+            const boroughsWithData = new Set(data.map(d => d.borough))
+
+            if(isDescending === false) {
+
+                boroughs.forEach((neighborhoods, borough) => {
+
+                    if (boroughsWithData.has(borough)) {
+                        var avgXPosition = d3.mean(neighborhoods, d => xScale(d.neighbourhood)) + xScale.bandwidth() / 2
+                    
+                        svg.append("text")
+                            .attr("class", "BoroughText")
+                            .attr("x", avgXPosition - 5)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 30)
+                            .attr("text-anchor", "middle")
+                            .style("font-size", "14px")
+                            .text(borough)
+
+                        //Appends legend to the correct color
+                        legend.append("rect")
+                            .attr("x", avgXPosition - 65)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+                            .attr("width", 15)
+                            .attr("height", 15)
+                            //Not sure on how to cycle through the colors
+                            .attr("fill", colorScale(borough));
+                    }
+                })
+            } else {
+                
+                const boroughsList = Array.from(boroughsWithData).sort()
+                const spacing = (dimensions.width - dimensions.margin.left - dimensions.margin.right) / boroughsList.length
+
+                boroughsList.forEach((borough, i) => {
+
+                    if (boroughsWithData.has(borough)) {
+                        var xPosition = dimensions.margin.left + (i * spacing) + spacing / 2
+                    
+                        svg.append("text")
+                            .attr("class", "BoroughText")
+                            .attr("x", xPosition)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 30)
+                            .attr("text-anchor", "middle")
+                            .style("font-size", "14px")
+                            .text(borough)
+
+                        //Appends legend to the correct color
+                        legend.append("rect")
+                            .attr("x", xPosition - 65)
+                            .attr("y", dimensions.height - dimensions.margin.bottom + 15)
+                            .attr("width", 15)
+                            .attr("height", 15)
+                            //Not sure on how to cycle through the colors
+                            .attr("fill", colorScale(borough));
+                    }
+                })
+            }
         }
     }
 

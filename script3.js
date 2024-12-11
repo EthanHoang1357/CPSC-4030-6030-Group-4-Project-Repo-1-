@@ -130,8 +130,8 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         var legendHeight = 20;
 
         //used to position legend rectangle
-        var legendX = dimensions.width - legendWidth - dimensions.margin.right - 5;   
-        var legendY = dimensions.margin.top + 260;
+        var legendX = 10;   
+        var legendY = 80;
 
         //append defs and a gradient for the legend
         var defs = svg.append("defs");
@@ -168,6 +168,12 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .attr("transform", `translate(0, ${legendY + legendHeight})`)
             .call(legendAxis);
 
+        svg.append("text")
+           .attr("x", legendX - 7)
+           .attr("y", legendY + 36)
+           .attr("font-family", "sans-serif")
+           .attr("font-size", "10px")
+           .text(`$${d3.min(dataset, d => +d.price)}`)
 
 
         function updateListingsCount(count) {
@@ -446,10 +452,10 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
         function zoomed(event) {
             const { transform } = event
-            svg.select("g").attr("transform", transform)
-            svg.selectAll(".points")
-               .attr("transform", transform)
+            svg.select("g").attr("transform", transform.translate(50, 0))
+            svg.selectAll(".points").attr("transform", transform.translate(50, 0))
             svg.selectAll(".boroughs").attr("stroke-width", 1 / transform.k)
+                                      .attr("transfrom", transform.translate(50, 0))
         }
 
         window.updateMapByNeighborhood = updateMapByNeighborhood
