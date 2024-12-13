@@ -1,4 +1,6 @@
 d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
+
+    //Bar chart dimensions
     var dimensions = {
         height: 425,
         width: 1600,
@@ -10,41 +12,48 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
         }
     }
 
+    //Excludes invalid data and standardizes attribute naming
     dataset = dataset.filter(d => d["neighbourhood group"] && d.neighbourhood && !isNaN(+d['review rate number']) && +d['review rate number'] > 0)
-
     dataset.forEach(d => {
         if (d["neighbourhood group"] === "brookln") d["neighbourhood group"] = "Brooklyn"
         if (d["neighbourhood group"] === "manhatan") d["neighbourhood group"] = "Manhattan"
     })
 
+    //Calculate average review by neighborhood grouped by borough and neighborhood
     var avgReviewByNeighborhood = d3.rollup(dataset, 
         v => d3.mean(v, d => +d["review rate number"]),
         d => d["neighbourhood group"],
         d => d["neighbourhood"]
     )
 
-    
+    //Convert nested map to flat array
     var data = Array.from(avgReviewByNeighborhood, ([borough, neighbourhoods]) => 
         Array.from(neighbourhoods, ([neighbourhood, avgReview]) => ({ borough, neighbourhood, avgReview }))
     ).flat()
 
+    //Sort data ascending by borough and descending by average review
     data.sort((a, b) => d3.ascending(a.borough, b.borough) || d3.descending(a.avgReview, b.avgReview))
 
+    //SVG container for bar chart
     var svg = d3.select("#BarChart")
                 .style("width", dimensions.width)
                 .style("height", dimensions.height)
 
+    //Create x-axis with neighborhood names
     var xScale = d3.scaleBand()
                    .domain(data.map(d => d.neighbourhood))
                    .range([dimensions.margin.left, dimensions.width - dimensions.margin.right])
                    .padding(0.2)
 
+    //Create y-axis with fixed domain
     var yScale = d3.scaleLinear()
                    .domain([0, 5])
                    .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
+    //Create borough color scale
     var colorScale = d3.scaleOrdinal(["#1E90FF", "#EB0086", "#8A2BE2", "#F77F00", "#BEAF0C"])
 
+    //Tooltip for interactivity
     var tooltip = d3.select("body")
                     .append("div")
                     .style("position", "absolute")
@@ -57,6 +66,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
 
     var barsGroup = svg.append("g")
 
+    //Rectangles for each data point
     barsGroup.selectAll("rect")
                   .data(data)
                   .enter()
@@ -82,21 +92,22 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
                         tooltip.style("opacity", 0)
                   })
     
-
+    //Append x-axis to SVG
     var xAxisGen = d3.axisBottom().scale(xScale)
     var xAxis = svg.append("g")
                     .call(xAxisGen)
                     .style("transform", `translateY(${dimensions.height - dimensions.margin.bottom}px)`)
 
-
-
-
     xAxis.selectAll("text").remove()
+    
+    //Group data by borough to add borough labels
     var boroughs = d3.group(data, d => d.borough)
     boroughs.forEach((neighborhoods, borough) => {
         var firstNeighborhood = neighborhoods[0]
         var lastNeighborhood = neighborhoods[neighborhoods.length - 1]
         var xPosition = (xScale(firstNeighborhood.neighbourhood) + xScale(lastNeighborhood.neighbourhood)) / 2 + xScale.bandwidth() / 2
+        
+        //Append borough label to SVG
         svg.append("text")
             .attr("class", "BoroughText")
             .attr("x", xPosition)
@@ -106,7 +117,7 @@ d3.csv("Airbnb_Open_Data.csv").then(function(dataset) {
             .text(borough)
     })
 
-
+//Adds legend element for each borough
 var legend = svg.append("g")
 
     legend.append("rect")
@@ -145,7 +156,7 @@ var legend = svg.append("g")
         .attr("fill", "#BEAF0C");
     
 
-
+    //Add axis label for borough x-axis
     var xAxisText = svg.append("text")
                        .attr("x", dimensions.width / 2)
                        .attr("y", dimensions.height - 30)
@@ -153,6 +164,7 @@ var legend = svg.append("g")
                        .style("font-size", "16px")
                        .text("Borough")
         
+    //Create y-axis generator with y-scale
     var yAxisGen = d3.axisLeft().scale(yScale)
     var yAxis = svg.append("g")
                     .call(yAxisGen)
@@ -161,6 +173,7 @@ var legend = svg.append("g")
     yAxis.selectAll("text")
         .style("font-size", "12px")
 
+    //Add axis label for avg. review rating y-axis
     var yAxisText = svg.append("text")
                         .attr("transform", "rotate(-90)")
                         .attr("x", -dimensions.height / 2 - 50)
@@ -169,11 +182,13 @@ var legend = svg.append("g")
                         .style("font-size", "16px")
                         .text("Avg Review Rating")
 
+    //Initialize filtered data, variables for tracking current neighborhood and borough
     var filteredData = dataset
     var CurrentlySelectedNeighborhood = null
     var currentBorough = null
     var currentNeighborhood = null
 
+    //Updates bar chart based on individual borough
     function updateBarChartByBorough(SelectedBorough) {
 
         d3.select("#sortButton").attr("disabled", true)
@@ -195,6 +210,7 @@ var legend = svg.append("g")
             })
         }
 
+        //Calculate average reviwe rating per neighborhood
         var avgReviewByNeighborhood = d3.rollup(
             filteredData,
             v => d3.mean(v, d => +d["review rate number"]),
@@ -212,8 +228,8 @@ var legend = svg.append("g")
         
         xScale.domain(data.map(d => d.neighbourhood))
 
+        //Create new bars for bar chart, adds tooltip interaction and click interaction for for individual neighborhood
         barsGroup.selectAll("rect").remove()
-
         barsGroup.selectAll("rect")
             .data(data)
             .enter()
@@ -253,6 +269,7 @@ var legend = svg.append("g")
                 updateScatterPlotByNeighborhood(i.neighbourhood)
             })
 
+            //Updates x-axis scale and redraw x-axis
             xAxisText.remove()
             svg.selectAll(".BoroughText").remove()
 
@@ -275,10 +292,12 @@ var legend = svg.append("g")
     
     var currentRoomType = null
 
+    //Function to update bar chart based on room type
     function updateBarChartByRoomType(SelectedRoomType) {
         legend.selectAll("rect").remove()
         currentRoomType = SelectedRoomType
 
+        //Filter data to selected room type
         if(currentBorough === null) {
             filteredData = dataset.filter(d => {
                 return d["room type"] === SelectedRoomType
@@ -291,6 +310,7 @@ var legend = svg.append("g")
             })
         }
     
+        //Calculate average review raiting for neighborhood
         var avgReviewByNeighborhood = d3.rollup(
             filteredData,
             v => d3.mean(v, d => +d["review rate number"]),
@@ -412,7 +432,6 @@ var legend = svg.append("g")
                                 .attr("y", dimensions.height - dimensions.margin.bottom + 15)
                                 .attr("width", 15)
                                 .attr("height", 15)
-                                //Not sure on how to cycle through the colors
                                 .attr("fill", colorScale(borough));
                         }
                     })
@@ -450,7 +469,6 @@ var legend = svg.append("g")
                                 .attr("y", dimensions.height - dimensions.margin.bottom + 15)
                                 .attr("width", 15)
                                 .attr("height", 15)
-                                //Not sure on how to cycle through the colors
                                 .attr("fill", colorScale(borough));
                         }
                     })
@@ -581,7 +599,6 @@ var legend = svg.append("g")
                             .attr("y", dimensions.height - dimensions.margin.bottom + 15)
                             .attr("width", 15)
                             .attr("height", 15)
-                            //Not sure on how to cycle through the colors
                             .attr("fill", colorScale(borough));
                     }
                 })
@@ -609,7 +626,6 @@ var legend = svg.append("g")
                             .attr("y", dimensions.height - dimensions.margin.bottom + 15)
                             .attr("width", 15)
                             .attr("height", 15)
-                            //Not sure on how to cycle through the colors
                             .attr("fill", colorScale(borough));
                     }
                 })

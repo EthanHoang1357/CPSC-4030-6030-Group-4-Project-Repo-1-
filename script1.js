@@ -1,6 +1,7 @@
 d3.csv("Airbnb_Open_Data.csv").then(
     function(dataset) {
 
+        //Scatterplot dimensions
         var dimensions = {
             height: 350,
             width: 785,
@@ -12,8 +13,10 @@ d3.csv("Airbnb_Open_Data.csv").then(
             }
         }
 
+        //Excludes invalid data
         dataset = dataset.filter(d => d["minimum nights"] > 0 && d["minimum nights"] < 366)
 
+        //Standardize attributes to numeric data, handle missing data
         dataset.forEach(d => {
             d['service fee'] = +d['service fee'].replace(/[$,]/g, "")
             d['minimum nights'] = +d['minimum nights']
@@ -22,6 +25,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
             }
         })
 
+        //Group data and by minimum nights and room type, calculate average service fee
         const groupedData = d3.flatRollup(
             dataset,
             v => ({
@@ -38,25 +42,30 @@ d3.csv("Airbnb_Open_Data.csv").then(
             avgServiceFee: values.avgServiceFee
         }))
 
+        //Colors for scatterplot
         var customColors = ["#264653", "#2A9D8F", "#AD0F8F", "#0062D5"]
-       
         var colorScale = d3.scaleOrdinal()
                              .domain([...new Set(dataset.map(d => d['room type']))])
                              .range(customColors)
 
         const roomTypes = colorScale.domain()
+
+        //SVG Container for scatterplot
         var svg = d3.select("#ScatterPlot")
                     .style("width", dimensions.width)
                     .style("height", dimensions.height)
 
+        //X-scale for average service fee
         var xScale = d3.scaleLinear()
                        .domain([d3.min(processedData, d => d.avgServiceFee) - 10, d3.max(processedData, d => d.avgServiceFee) + 10])
                        .range([dimensions.margin.left, dimensions.width - dimensions.margin.right])
 
+        //Y-scale for minimum nights
         var yScale = d3.scaleLinear()
                        .domain(d3.extent(processedData, d => d.minNights))
                        .range([dimensions.height - dimensions.margin.bottom, dimensions.margin.top])
 
+        //Generate x-axis and add it to SVG with labels
         var xAxisGen = d3.axisBottom().scale(xScale)
                          .tickFormat(d3.format("$d"))
 
@@ -71,13 +80,12 @@ d3.csv("Airbnb_Open_Data.csv").then(
                            .style("font-size", "16px")
                            .text("Average Service Fee")
 
+        //Generate y-axis and add it to SVG with labels
         var yAxisGen = d3.axisLeft().scale(yScale)
                          .tickFormat(d3.format("d"))
-
         var yAxis = svg.append("g")
                        .attr("transform", `translate(${dimensions.margin.left}, 0)`)
                        .call(yAxisGen)
-        
         var yAxisText = svg.append("text")
                            .attr("transform", "rotate(-90)")
                            .attr("x", -dimensions.height / 2 - 50)
@@ -86,6 +94,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                            .style("font-size", "16px")
                            .text("Minimum Nights")
 
+        //Generate tooltip popouts
         var tooltip = d3.select("body")
                         .append("div")
                         .style("position", "absolute")
@@ -96,6 +105,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                         .style("pointer-events", "none")
                         .style("opacity", 0)
 
+        //Plots scatterplot points, adds tooltip interaction upon hovering over points
         var PlotPoints = svg.append("g")
                             .selectAll("dot")
                             .data(processedData)
@@ -121,6 +131,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                                 tooltip.style("opacity", 0)
                           })
 
+        //Add legend to SVG
         const legend = svg.append("g")
                           .attr("transform", `translate(${dimensions.width - 100}, 130)`)
                           .attr("class", "legend")
@@ -130,6 +141,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
         
         var currentlySelectedRoomType = null
         
+        //Add interactivity for filtering by room type
         legend.selectAll("rect")
               .data(roomTypes) 
               .enter()
@@ -164,6 +176,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
                 updateBarChartByRoomType(i)
            })      
 
+        //Add legend labels
         legend.selectAll("text")
               .data(roomTypes)
               .enter()
@@ -174,6 +187,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
               .style("font-size", "10px") 
               .text(d => d)
                         
+        //Add chart title
         var title = svg.append("text")
                        .attr("x", dimensions.width / 2)
                        .attr("y", dimensions.margin.top / 2)
@@ -184,7 +198,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
     var filteredData = dataset
     var currentBorough = null
 
-    //code goes here
+    //Updates scatterplot by specific borough
     function updateScatterPlotByBorough(SelectedBorough){
 
         currentBorough = SelectedBorough
@@ -255,6 +269,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
     var currentNeighborhood = null
 
+    //Updates scatterplot by individual neighborhood
     function updateScatterPlotByNeighborhood(selectedNeighborhood){
 
         currentNeighborhood = selectedNeighborhood
@@ -326,6 +341,7 @@ d3.csv("Airbnb_Open_Data.csv").then(
 
     var currentRoomType = null
     
+    //Updates scatterplot by room type
     function updateScatterPlotByRoomType(selectedRoomType){
 
         currentRoomType = selectedRoomType
